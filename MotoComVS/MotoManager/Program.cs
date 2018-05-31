@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MotoComVS {
+namespace MotoManager {
 	class Program {
 		static void Main(string[] args) {
 		}

@@ -4,10 +4,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{187DF53D-56A2-4723-9711-96EBFE40DD25}</ProjectGuid>
+    <ProjectGuid>{441FAE22-C5EC-4CC3-9888-9157070B0430}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>MotoComVS</RootNamespace>
-    <AssemblyName>MotoComVS</AssemblyName>
+    <RootNamespace>MotoManager</RootNamespace>
+    <AssemblyName>MotoManager</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
