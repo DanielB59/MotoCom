@@ -319,6 +319,3 @@ void printMessageBits(uint32_t messege) {
 
 
 }
-
-
-
