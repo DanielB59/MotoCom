@@ -4,7 +4,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{441FAE22-C5EC-4CC3-9888-9157070B0430}</ProjectGuid>
+    <ProjectGuid>{9B088154-3E90-4568-A2BD-A3F3100E1318}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>MotoManager</RootNamespace>
     <AssemblyName>MotoManager</AssemblyName>
@@ -32,21 +32,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ArduinoDriver, Version=2.4.6.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\ArduinoDriver.2.4.6\lib\net452\ArduinoDriver.dll</HintPath>
-    </Reference>
-    <Reference Include="ArduinoUploader, Version=3.1.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\ArduinoUploader.3.2.0\lib\net452\ArduinoUploader.dll</HintPath>
-    </Reference>
-    <Reference Include="IntelHexFormatReader, Version=2.2.3.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\IntelHexFormatReader.2.2.3\lib\net45\IntelHexFormatReader.dll</HintPath>
-    </Reference>
-    <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
-      <HintPath>..\packages\NLog.4.4.10\lib\net45\NLog.dll</HintPath>
-    </Reference>
-    <Reference Include="RJCP.SerialPortStream, Version=2.1.2.0, Culture=neutral, PublicKeyToken=5f5e7b70c6a74deb, processorArchitecture=MSIL">
-      <HintPath>..\packages\SerialPortStream.2.1.2\lib\net45\RJCP.SerialPortStream.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -62,10 +47,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="library\" />
+    <ProjectReference Include="..\ArduinoDriver\ArduinoDriver.csproj">
+      <Project>{1fe32cd3-938f-40a7-b0a5-75cf0a7254d7}</Project>
+      <Name>ArduinoDriver</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
