@@ -4,10 +4,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{9B088154-3E90-4568-A2BD-A3F3100E1318}</ProjectGuid>
+    <ProjectGuid>{08F1BB22-3283-440B-8074-FF77C83D2FBE}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>MotoManager</RootNamespace>
-    <AssemblyName>MotoManager</AssemblyName>
+    <RootNamespace>MotoComManager</RootNamespace>
+    <AssemblyName>MotoComManager</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -32,6 +32,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="RJCP.SerialPortStream, Version=2.1.4.0, Culture=neutral, PublicKeyToken=5f5e7b70c6a74deb, processorArchitecture=MSIL">
+      <HintPath>..\packages\SerialPortStream.2.1.4\lib\net45\RJCP.SerialPortStream.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -42,17 +45,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ArduinoDao.cs" />
+    <Compile Include="ArduinoDriver.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\ArduinoDriver\ArduinoDriver.csproj">
-      <Project>{1fe32cd3-938f-40a7-b0a5-75cf0a7254d7}</Project>
-      <Name>ArduinoDriver</Name>
-    </ProjectReference>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

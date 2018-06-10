@@ -3,13 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26228.10
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "library", "library", "{85A8CD3C-D863-450D-8DD1-D8B6E2F1C5B8}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArduinoDriver", "ArduinoDriver\ArduinoDriver.csproj", "{1FE32CD3-938F-40A7-B0A5-75CF0A7254D7}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "code", "code", "{CBB10D25-6538-451D-AF87-21ED1B173A35}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MotoManager", "MotoManager\MotoManager.csproj", "{9B088154-3E90-4568-A2BD-A3F3100E1318}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MotoComManager", "MotoComManager\MotoComManager.csproj", "{08F1BB22-3283-440B-8074-FF77C83D2FBE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,20 +11,12 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{1FE32CD3-938F-40A7-B0A5-75CF0A7254D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1FE32CD3-938F-40A7-B0A5-75CF0A7254D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1FE32CD3-938F-40A7-B0A5-75CF0A7254D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1FE32CD3-938F-40A7-B0A5-75CF0A7254D7}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9B088154-3E90-4568-A2BD-A3F3100E1318}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9B088154-3E90-4568-A2BD-A3F3100E1318}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9B088154-3E90-4568-A2BD-A3F3100E1318}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9B088154-3E90-4568-A2BD-A3F3100E1318}.Release|Any CPU.Build.0 = Release|Any CPU
+		{08F1BB22-3283-440B-8074-FF77C83D2FBE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{08F1BB22-3283-440B-8074-FF77C83D2FBE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{08F1BB22-3283-440B-8074-FF77C83D2FBE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{08F1BB22-3283-440B-8074-FF77C83D2FBE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{1FE32CD3-938F-40A7-B0A5-75CF0A7254D7} = {85A8CD3C-D863-450D-8DD1-D8B6E2F1C5B8}
-		{9B088154-3E90-4568-A2BD-A3F3100E1318} = {CBB10D25-6538-451D-AF87-21ED1B173A35}
 	EndGlobalSection
 EndGlobal
