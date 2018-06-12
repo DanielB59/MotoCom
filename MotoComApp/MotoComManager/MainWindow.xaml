@@ -1,0 +1,18 @@
+﻿<Window x:Class="MotoComManager.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:MotoComManager"
+        mc:Ignorable="d"
+		ResizeMode="CanResize"
+		MinHeight="300"
+		MinWidth="300"
+        Title="MotoCom Manager" Height="450" Width="800">
+	<Grid>
+		<GridSplitter VerticalAlignment="Stretch" Margin="215,0,0,0" HorizontalAlignment="Left" Width="5"/>
+		<ListBox HorizontalAlignment="Left" Margin="10,42,0,10" Width="200"/>
+		<Button Name="scan" Content="Scan" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Padding="5" Width="90" Height="auto"/>
+
+	</Grid>
+</Window>

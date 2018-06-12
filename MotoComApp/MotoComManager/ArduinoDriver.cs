@@ -13,7 +13,7 @@ namespace MotoComManager {
 	partial class ArduinoDriver {
 		string port;
 		int baud;
-		public SerialPortStream stream;	//TODO: remove public when done.
+		public SerialPortStream stream; //TODO: remove public when done.
 	}
 
 	partial class ArduinoDriver {
@@ -35,7 +35,7 @@ namespace MotoComManager {
 			open();
 		}
 
-		~ArduinoDriver() => this.Dispose();
+		~ArduinoDriver() => Dispose(false);
 	}
 
 	partial class ArduinoDriver : IDisposable {
@@ -47,15 +47,24 @@ namespace MotoComManager {
 			if (stream.IsOpen) stream.Close();
 		}
 
-		public void Dispose() {
-			try {
-				stream.Dispose();
-			}
-			catch {
-				//TODO: error handling
-				throw new NotImplementedException();
+		#region IDisposable Support
+		private bool disposedValue = false;
+
+		protected virtual void Dispose(bool disposing) {
+			if (!disposedValue) {
+				if (disposing) {
+					stream.Dispose();
+				}
+
+				disposedValue = true;
 			}
 		}
+
+		public void Dispose() {
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
+		#endregion
 	}
 
 	partial class ArduinoDriver {
@@ -71,14 +80,13 @@ namespace MotoComManager {
 				do {
 					stream.EndWrite(stream.BeginWrite(sync, 0, Message.messageSize, null, null));
 					stream.EndRead(stream.BeginRead(sync, 0, Message.messageSize, null, null));
-					stream.Flush();
+					//stream.Flush();	//TODO: look into, for some reason causes error with sync
 				} while (0xFF000 != BitConverter.ToInt32(sync, 0) && attempts < 5);
 			}
 			catch {
 				//TODO: error handling
 				return false;
 			}
-
 			return (attempts < 5) ? true : false;
 		}
 

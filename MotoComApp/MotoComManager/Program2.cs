@@ -8,7 +8,7 @@ using RJCP.IO;
 using RJCP.IO.Ports;
 
 namespace MotoComManager {
-	class Program {
+	class Program2 {
 		static void Main(string[] args) {
 			goto skip;
 			byte[] bytes = null;
@@ -24,9 +24,10 @@ namespace MotoComManager {
 			Console.ReadKey();
 			skip:
 			ArduinoDao.Instance.scanDevices();
-			foreach(PortDescription port in ArduinoDao.Instance.drivers.Keys) {
+			foreach (PortDescription port in ArduinoDao.Instance.drivers.Keys) {
 				Console.WriteLine(port.Port + " | " + port.Description);
 			}
+			Console.ReadKey();
 		}
 	}
 }

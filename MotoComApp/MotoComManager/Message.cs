@@ -22,7 +22,7 @@ namespace MotoComManager {
 			MessageValue &= 0x7FFFF;
 		}
 
-		public static implicit operator byte[](Message message) {
+		public static implicit operator byte[] (Message message) {
 			return BitConverter.GetBytes(message.MessageValue);
 		}
 
