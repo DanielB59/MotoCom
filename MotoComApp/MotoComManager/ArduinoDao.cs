@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -21,7 +22,7 @@ namespace MotoComManager {
 		}
 
 		private ArduinoDao() {
-			ItemsSource = drivers;
+			//ItemsSource = drivers;
 		}
 
 		~ArduinoDao() => Dispose(false);
@@ -51,9 +52,10 @@ namespace MotoComManager {
 		ArduinoDriver selectedDriver = null;
 		PortDescription selectedPort = null;
 		public Dictionary<PortDescription, ArduinoDriver> drivers = new Dictionary<PortDescription, ArduinoDriver>();
+		//ObservableCollection<KeyValuePair<PortDescription, ArduinoDriver>> coll = new ObservableCollection<KeyValuePair<PortDescription, ArduinoDriver>>(drivers);
 	}
 
-	partial class ArduinoDao: System.Windows.Controls.ItemsControl {
+	partial class ArduinoDao {//: System.Windows.Controls.ItemsControl {
 		public void scanDevices() {
 			foreach (PortDescription port in SerialPortStream.GetPortDescriptions()) {
 				ArduinoDriver driver = new ArduinoDriver(port.Port);

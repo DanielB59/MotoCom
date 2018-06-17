@@ -11,7 +11,9 @@
         Title="MotoCom Manager" Height="450" Width="800">
 	<Grid>
 		<GridSplitter VerticalAlignment="Stretch" Margin="215,0,0,0" HorizontalAlignment="Left" Width="5"/>
-		<ListBox HorizontalAlignment="Left" Margin="10,42,0,10" Width="200"/>
+		<ListBox HorizontalAlignment="Left" Margin="10,42,0,10" Width="200">
+			<ListBoxItem Content="ListBoxItem"/>
+		</ListBox>
 		<Button Name="scan" Content="Scan" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Padding="5" Width="90" Height="auto"/>
 
 	</Grid>

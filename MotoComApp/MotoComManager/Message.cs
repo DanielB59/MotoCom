@@ -13,17 +13,30 @@ namespace MotoComManager {
 		public enum SenderType : UInt32 { soldier = 0, commander = 1, hq = 2, external = 3 };
 		public enum MessageData : UInt32 { fire = 0, stopFire = 1, advance = 2, retreat = 3, ack = 4, requestID = 5, assignID = 6, isConnected = 7, verifyConnect = 8 };
 
-		public UInt32 MessageValue { get; private set; }
-
 		public const int messageSize = sizeof(UInt32);
 
+		private UInt32 messageValue;
+		public UInt32 MessageValue {
+			get => messageValue;
+
+			set {
+				value &= 0x7FFFF;
+				messageValue = value;
+				BitConverter.GetBytes(value).CopyTo(MessageBytes, 0);
+				Console.WriteLine("copy");
+			}
+		}
+		public byte[] MessageBytes { get; private set; }
+
 		public Message(UInt32 value = 0) {
+			MessageBytes = new byte[messageSize];
 			MessageValue = value;
-			MessageValue &= 0x7FFFF;
 		}
 
 		public static implicit operator byte[] (Message message) {
-			return BitConverter.GetBytes(message.MessageValue);
+			//return BitConverter.GetBytes(message.MessageValue);
+			Console.WriteLine("conversion");
+			return message.MessageBytes;
 		}
 
 		private int getOffset(Field field) {
