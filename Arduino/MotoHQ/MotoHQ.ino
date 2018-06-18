@@ -68,7 +68,9 @@ void sendMsgToComputer(uint32_t msg){
   }
 /// To Fill by michael
 void sendMsgToRadio(uint32_t msg){
-  
+    radio.openWritingPipe(addresses[0]);
+    radio.stopListening();
+    radio.write(&msg, sizeof(msg));
   }
 
   
