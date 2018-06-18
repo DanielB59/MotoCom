@@ -96,16 +96,24 @@ namespace MotoComManager {
 			//sps.Write(test, 0, Message.messageSize);*/
 			Console.ReadKey();
 			newtest:
+			Console.WriteLine("{0:x}", 0x3f << 6);
 			while (true) {
 				if (0 < myDriver.stream.BytesToRead) {
 					myDriver.stream.EndRead(myDriver.read(null, null));
 					myDriver.readQueue.TryDequeue(out test);
 					Console.WriteLine("{0:x}: {1} :{2}", test.MessageValue, test, test.MessageValue);
 				}
-				else if (Console.ReadKey().Key == ConsoleKey.A) {
-					test = new Message(0);
-					myDriver.writeQueue.Enqueue(test);
-					myDriver.write();
+				else if (Console.KeyAvailable) {
+					if (Console.ReadKey().Key == ConsoleKey.A) {
+						Console.WriteLine("sending");
+						test = new Message();
+						test[Message.Field.messageData] = (UInt32)Message.MessageData.retreat;
+						Console.WriteLine("{0:x}: {1} :{2}", test.MessageValue, test, test.MessageValue);
+						myDriver.writeQueue.Enqueue(test);
+						myDriver.write();
+					}
+					else if (Console.ReadKey().Key == ConsoleKey.Q)
+						break;
 				}
 			}
 		}
