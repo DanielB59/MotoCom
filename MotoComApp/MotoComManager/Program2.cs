@@ -12,7 +12,7 @@ using RJCP.IO.Ports;
 namespace MotoComManager {
 	class Program2 {
 		static void Main(string[] args) {
-			goto skip;
+			//goto skip;
 			byte[] bytes = null;
 			UInt32 val = 0xFE72;
 			ArduinoDriver driver = new ArduinoDriver("COM3", 9600);
@@ -24,6 +24,7 @@ namespace MotoComManager {
 			if (0xFe72 == val)
 				Console.WriteLine("equals!");
 			Console.ReadKey();
+			return;
 			skip:
 			goto skip2;
 			ArduinoDao.Instance.scanDevices();
