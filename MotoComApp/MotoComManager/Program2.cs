@@ -12,17 +12,19 @@ using RJCP.IO.Ports;
 namespace MotoComManager {
 	class Program2 {
 		static void Main(string[] args) {
-			//goto skip;
+			goto skip;
 			byte[] bytes = null;
 			UInt32 val = 0xFE72;
-			ArduinoDriver driver = new ArduinoDriver("COM3", 9600);
+			ArduinoDriver driver = new ArduinoDriver("COM5", 9600);
 			bytes = BitConverter.GetBytes(val);
 			driver.stream.Write(bytes, 0, sizeof(UInt32));
+			//goto derp;
 			driver.stream.Read(bytes, 0, sizeof(UInt32));
 			val = BitConverter.ToUInt32(bytes, 0);
 			Console.WriteLine(val);
 			if (0xFe72 == val)
 				Console.WriteLine("equals!");
+			derp:
 			Console.ReadKey();
 			return;
 			skip:

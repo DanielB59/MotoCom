@@ -64,8 +64,9 @@ if (Serial.available()) {
 }
 /// To Fill Daniel
 void sendMsgToComputer(uint32_t msg){
-  
-  }
+  Serial.write((byte*)&num, sizeof(num));
+  //Serial.flush();
+}
 /// To Fill by michael
 void sendMsgToRadio(uint32_t msg){
   

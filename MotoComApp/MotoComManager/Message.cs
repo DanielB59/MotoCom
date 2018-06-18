@@ -23,7 +23,6 @@ namespace MotoComManager {
 				value &= 0x7FFFF;
 				messageValue = value;
 				BitConverter.GetBytes(value).CopyTo(MessageBytes, 0);
-				Console.WriteLine("copy");
 			}
 		}
 		public byte[] MessageBytes { get; private set; }
@@ -34,8 +33,6 @@ namespace MotoComManager {
 		}
 
 		public static implicit operator byte[] (Message message) {
-			//return BitConverter.GetBytes(message.MessageValue);
-			Console.WriteLine("conversion");
 			return message.MessageBytes;
 		}
 
