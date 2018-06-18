@@ -29,6 +29,7 @@ Thread computerListenerThread = Thread();
 void setup() {
   pinMode(2, OUTPUT);
   pinMode(3, OUTPUT);
+  pinMode(4, OUTPUT);
   Serial.begin(9600);
   radio.begin();
   // Configure Threads
@@ -48,10 +49,12 @@ void chackRadioForInput() {
   radio.startListening();
   if (radio.available())
   {
+    digitalWrite(4, HIGH);
     uint32_t text = {0};
     radio.read(&text, sizeof(text));
     sendMsgToComputer(text);
-    
+    delay(200);
+    digitalWrite(4, LOW);
   }
 }
 void chackComputerForInput() {
@@ -69,13 +72,16 @@ if (Serial.available()) {
     //sendMsgToRadio(0);
     while (0 < Serial.available()) buffer[count++] = Serial.read();
     msg = (*(uint32_t*)buffer);
-    if (0xFE72 == msg)
+    //sendMsgToComputer(msg);
+    
+    if (0xFF000 == msg){
       digitalWrite(3, HIGH);
-    sendMsgToComputer(msg);
-    delay(500);
-    /*if (0xFE72 == msg)
+      sendMsgToComputer(msg);
+      delay(500);
       digitalWrite(3, LOW);
-     delay(500);*/
+    }else {
+      sendMsgToRadio(msg);
+    }
   }
 }
 /// To Fill Daniel

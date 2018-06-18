@@ -64,6 +64,7 @@ namespace MotoComManager {
 			Message test = new Message(0xFE72);
 			ArduinoDriver myDriver = new ArduinoDriver("COM5", 9600);
 			myDriver.synchronize();
+			goto newtest;
 			//goto fix;
 			myDriver.writeQueue.Enqueue(test);
 			//myDriver.stream.EndWrite(myDriver.stream.BeginWrite(test, null, null));
@@ -94,11 +95,17 @@ namespace MotoComManager {
 			//test.MessageValue = 0x68;
 			//sps.Write(test, 0, Message.messageSize);*/
 			Console.ReadKey();
+			newtest:
 			while (true) {
 				if (0 < myDriver.stream.BytesToRead) {
 					myDriver.stream.EndRead(myDriver.read(null, null));
 					myDriver.readQueue.TryDequeue(out test);
-					Console.WriteLine(test);
+					Console.WriteLine("{0:x}: {1} :{2}", test.MessageValue, test, test.MessageValue);
+				}
+				else if (Console.ReadKey().Key == ConsoleKey.A) {
+					test = new Message(0);
+					myDriver.writeQueue.Enqueue(test);
+					myDriver.write();
 				}
 			}
 		}
