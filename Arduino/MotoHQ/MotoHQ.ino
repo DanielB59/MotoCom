@@ -27,6 +27,8 @@ Thread radioListenerThread = Thread();
 Thread computerListenerThread = Thread();
 
 void setup() {
+  pinMode(2, OUTPUT);
+  pinMode(3, OUTPUT);
   Serial.begin(9600);
   radio.begin();
   // Configure Threads
@@ -53,19 +55,33 @@ void chackRadioForInput() {
   }
 }
 void chackComputerForInput() {
+  byte buffer[sizeof(uint32_t)] = {0};
+  uint32_t count = 0, msg = 0;
 if (Serial.available()) {
+  digitalWrite(2, HIGH);
+      delay(500);
+    digitalWrite(2, LOW);
     /// Here Handle Mesage
     /// Extract mssage from serial and send it to radio
     // to fill by daniel
-    Serial.println( Serial.read());
+    //Serial.println( Serial.read());
     /// Michael will do just get the msg in uint32_t fromat
-    sendMsgToRadio(0);
+    //sendMsgToRadio(0);
+    while (0 < Serial.available()) buffer[count++] = Serial.read();
+    msg = (*(uint32_t*)buffer);
+    if (0xFE72 == msg)
+      digitalWrite(3, HIGH);
+    sendMsgToComputer(msg);
+    delay(500);
+    /*if (0xFE72 == msg)
+      digitalWrite(3, LOW);
+     delay(500);*/
   }
 }
 /// To Fill Daniel
 void sendMsgToComputer(uint32_t msg){
-  Serial.write((byte*)&num, sizeof(num));
-  //Serial.flush();
+  Serial.write((byte*)&msg, sizeof(msg));
+  Serial.flush();
 }
 /// To Fill by michael
 void sendMsgToRadio(uint32_t msg){

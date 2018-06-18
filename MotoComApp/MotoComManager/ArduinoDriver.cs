@@ -17,7 +17,7 @@ namespace MotoComManager {
 	}
 
 	partial class ArduinoDriver {
-		public ArduinoDriver(string port, int baud = -1) {
+		public ArduinoDriver(string port, int baud = -1, int ReadTimeout = 500, int WriteTimeout = 200) {
 			this.port = port;
 			stream = new SerialPortStream(port);
 
@@ -30,8 +30,10 @@ namespace MotoComManager {
 				stream.BaudRate = baud;
 			}
 
-			stream.ReadTimeout = 200;
-			stream.WriteTimeout = 200;
+			stream.ReadTimeout = ReadTimeout;
+			stream.WriteTimeout = WriteTimeout;
+			//stream.ReadBufferSize = sizeof(UInt32);
+			//stream.WriteBufferSize = sizeof(UInt32);
 			open();
 		}
 
@@ -74,19 +76,26 @@ namespace MotoComManager {
 		//SpinLock flushable = new SpinLock();	//TODO: is this required??
 
 		public bool synchronize() {
-			int attempts = 1;
-			byte[] sync = BitConverter.GetBytes(Convert.ToUInt32(0xFF000));
+			int attempts = 1, retrieved = 0, retryCount = 0;
+			byte[] sync = null;
 			try {
 				do {
-					stream.EndWrite(stream.BeginWrite(sync, 0, Message.messageSize, null, null));
-					//sync = BitConverter.GetBytes(Convert.ToUInt32(0x0));
-					//for (int i = 0; i < sync.Length; ++i) sync[i] = 0;
-					//Thread.Sleep(stream.WriteTimeout*2);
+					sync = BitConverter.GetBytes(Convert.ToUInt32(0xFF000));
+					//stream.EndWrite(stream.BeginWrite(sync, 0, Message.messageSize, null, null));
+					Console.WriteLine("before {0:x}", BitConverter.ToUInt32(sync, 0));
+					stream.Write(sync, 0, Message.messageSize);
 					stream.Flush();
-					stream.EndRead(stream.BeginRead(sync, 0, Message.messageSize, null, null));
-					Console.WriteLine("{0:x}", BitConverter.ToUInt32(sync, 0));
+					sync = BitConverter.GetBytes(Convert.ToUInt32(0x0));
+					Console.WriteLine("clean {0:x}", BitConverter.ToUInt32(sync, 0));
+					//stream.EndRead(stream.BeginRead(sync, 0, Message.messageSize, null, null));
+					stream.Read(sync, 0, Message.messageSize);
+					//while (retrieved < Message.messageSize && retryCount++ < 100)
+					//sync[retrieved++] = stream.ReadByte();
+					//retrieved += stream.Read(sync, retrieved, Message.messageSize - retrieved);
+
+					Console.WriteLine("after {0:x}", BitConverter.ToUInt32(sync, 0));// & 0x7FFF);
 					stream.Flush();
-				} while (0xFF000 != BitConverter.ToInt32(sync, 0) && attempts++ < 3);
+				} while (0xFF000 != BitConverter.ToInt32(sync, 0) && attempts++ < 100);
 			}
 			catch {
 				//TODO: error handling
@@ -95,14 +104,25 @@ namespace MotoComManager {
 			return (attempts < 3) ? true : false;
 		}
 
-		public int read(AsyncCallback callback = null, object state = null) {
+		public IAsyncResult read(AsyncCallback callback = null, object state = null) {
 			Message readMessage = new Message();
 			try {
-				callback += (IAsyncResult result) => {
-					//if (result.IsCompleted)
-						readQueue.Enqueue(readMessage);
-				};
-				return stream.BeginRead(out readMessage, callback, state);
+				if (stream.CanRead && 0 < stream.BytesToRead) {
+					Console.WriteLine("in");
+					callback += (IAsyncResult result) => {  //TODO: modify/enhance
+						if (result.IsCompleted) {
+							readMessage.MessageValue = BitConverter.ToUInt32(readMessage.MessageBytes, 0);
+							readQueue.Enqueue(readMessage);
+							Console.WriteLine("enqueued");
+						}
+					};
+
+					return stream.BeginRead(out readMessage, callback, state);
+					/*callback(null);
+					return res;*/
+				}
+				else
+					return null;
 			}
 			catch (Exception e) {
 				//TODO: error handling
@@ -114,29 +134,28 @@ namespace MotoComManager {
 		public IAsyncResult write(AsyncCallback callback = null, object state = null) {
 			Message writeMessage = null;
 			try {
-				if (writeQueue.TryDequeue(out writeMessage))
-					return null;
+				callback += (res) => Console.WriteLine("sent");
+				if (stream.CanWrite) {
+					if (writeQueue.TryDequeue(out writeMessage)) {
+						return stream.BeginWrite(writeMessage, callback, state);
+					}
+					else
+						return null;
+				}
 				else
-					return stream.BeginWrite(writeMessage, callback, state);
+					return null;
 			}
-			catch {
+			catch (Exception e) {
 				//TODO: error handling
+				Console.WriteLine(e.StackTrace);
 				throw new NotImplementedException();
 			}
 		}
 	}
 
 	static class SerialPortStreamExtentions {
-		public static int BeginRead(this SerialPortStream stream, out Message message, AsyncCallback callback, object state) {
-			byte[] bytes = new byte[Message.messageSize];
-			//callback += (res) => message = new Message(BitConverter.ToUInt32(bytes, 0));
-			message = null;
-			//callback += (IAsyncResult res) => Console.WriteLine(res.IsCompleted);
-			//return stream.BeginRead(bytes, 0, Message.messageSize, callback, state);
-			stream.Read(bytes, 0, Message.messageSize);
-			callback(null);
-			return 0;
-		}
+		public static IAsyncResult BeginRead(this SerialPortStream stream, out Message message, AsyncCallback callback, object state)
+			=> stream.BeginRead((message = new Message()).MessageBytes, 0, Message.messageSize, callback, state);
 		public static IAsyncResult BeginWrite(this SerialPortStream stream, Message message, AsyncCallback callback, object state)
 			=> stream.BeginWrite(message, 0, Message.messageSize, callback, state);
 	}

@@ -25,7 +25,7 @@ namespace MotoComManager {
 				BitConverter.GetBytes(value).CopyTo(MessageBytes, 0);
 			}
 		}
-		public byte[] MessageBytes { get; private set; }
+		public byte[] MessageBytes { get; set; }
 
 		public Message(UInt32 value = 0) {
 			MessageBytes = new byte[messageSize];
