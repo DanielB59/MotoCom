@@ -64,16 +64,10 @@ if (Serial.available()) {
   digitalWrite(2, HIGH);
       delay(500);
     digitalWrite(2, LOW);
-    /// Here Handle Mesage
-    /// Extract mssage from serial and send it to radio
-    // to fill by daniel
-    //Serial.println( Serial.read());
-    /// Michael will do just get the msg in uint32_t fromat
-    //sendMsgToRadio(0);
+
     while (0 < Serial.available()) buffer[count++] = Serial.read();
     msg = (*(uint32_t*)buffer);
-    //sendMsgToComputer(msg);
-    
+
     if (0xFF000 == msg){
       digitalWrite(3, HIGH);
       sendMsgToComputer(msg);
