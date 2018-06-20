@@ -37,8 +37,8 @@ namespace MotoComManager {
 			skip:
 			goto skip2;
 			ArduinoDao.Instance.scanDevices();
-			foreach (PortDescription port in ArduinoDao.Instance.drivers.Keys) {
-				Console.WriteLine(port.Port + " | " + port.Description);
+			foreach (string port in ArduinoDao.Instance.drivers.Keys) {
+				Console.WriteLine(port + " | " + port);
 			}
 			skip2:
 			goto skip3;

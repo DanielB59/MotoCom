@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Collections;
 
 namespace MotoComManager {
-	class Message {
+	public class Message {
 		public enum Field : UInt32 { from = 0x3F, to = 0xFC0, broadcastType = 0x3000, senderType = 0xC000, messageData = 0x70000 };
 
 		public enum BroadcastType : UInt32 { all = 0, single = 1, control = 2, distress = 3 };

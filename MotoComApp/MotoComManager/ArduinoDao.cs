@@ -21,9 +21,7 @@ namespace MotoComManager {
 			}
 		}
 
-		private ArduinoDao() {
-			//ItemsSource = drivers;
-		}
+		private ArduinoDao() { }
 
 		~ArduinoDao() => Dispose(false);
 
@@ -50,17 +48,50 @@ namespace MotoComManager {
 
 	partial class ArduinoDao {
 		ArduinoDriver selectedDriver = null;
-		PortDescription selectedPort = null;
-		public Dictionary<PortDescription, ArduinoDriver> drivers = new Dictionary<PortDescription, ArduinoDriver>();
-		//ObservableCollection<KeyValuePair<PortDescription, ArduinoDriver>> coll = new ObservableCollection<KeyValuePair<PortDescription, ArduinoDriver>>(drivers);
+		string selectedPort = null;
+		public Dictionary<string, ArduinoDriver> drivers = new Dictionary<string, ArduinoDriver>();
+		public ObservableCollection<ArduinoDriver> viewList = new ObservableCollection<ArduinoDriver>();
 	}
 
-	partial class ArduinoDao {//: System.Windows.Controls.ItemsControl {
+	partial class ArduinoDao {
+		public void enqueueMessage(Message msg) {
+			selectedDriver.writeQueue.Enqueue(msg);
+		}
+
+		public void dequeueMessage(out Message msg) {
+			selectedDriver.readQueue.TryDequeue(out msg);
+		}
+
 		public void scanDevices() {
+			ArduinoDriver driver = null;
+			//Func<bool> sync = null;
+			//Task<bool> sync = null;
+			viewList.Clear();
 			foreach (PortDescription port in SerialPortStream.GetPortDescriptions()) {
-				ArduinoDriver driver = new ArduinoDriver(port.Port);
-				if (driver.synchronize())
-					drivers.Add(port, driver);
+				try {
+					if (!drivers.ContainsKey(port.Port)) {
+						driver = new ArduinoDriver(port.Port);
+						drivers.Add(port.Port, driver);
+						viewList.Add(driver);
+					}
+					else
+						try {
+							Console.WriteLine("before");
+							driver = drivers[port.Port];
+							driver.synchronize();
+							viewList.Add(driver);
+							Console.WriteLine("after");
+						}
+						catch {
+							drivers.Remove(port.Port);
+							throw;
+						}
+						
+				}
+				catch {
+					if (null != driver)
+						driver.Dispose();
+				}
 			}
 		}
 	}

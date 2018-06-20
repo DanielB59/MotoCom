@@ -10,13 +10,13 @@ using RJCP.IO;
 using RJCP.IO.Ports;
 
 namespace MotoComManager {
-	partial class ArduinoDriver {
+	public partial class ArduinoDriver {
 		string port;
 		int baud;
 		public SerialPortStream stream; //TODO: remove public when done.
 	}
 
-	partial class ArduinoDriver {
+	public partial class ArduinoDriver {
 		public ArduinoDriver(string port, int baud = -1, int ReadTimeout = 500, int WriteTimeout = 200) {
 			this.port = port;
 			stream = new SerialPortStream(port);
@@ -32,15 +32,14 @@ namespace MotoComManager {
 
 			stream.ReadTimeout = ReadTimeout;
 			stream.WriteTimeout = WriteTimeout;
-			//stream.ReadBufferSize = sizeof(UInt32);
-			//stream.WriteBufferSize = sizeof(UInt32);
 			open();
+			synchronize();
 		}
 
 		~ArduinoDriver() => Dispose(false);
 	}
 
-	partial class ArduinoDriver : IDisposable {
+	public partial class ArduinoDriver : IDisposable {
 		public void open() {
 			if (!stream.IsOpen) stream.Open();
 		}
@@ -69,7 +68,7 @@ namespace MotoComManager {
 		#endregion
 	}
 
-	partial class ArduinoDriver {
+	public partial class ArduinoDriver {
 		public ConcurrentQueue<Message> readQueue = new ConcurrentQueue<Message>();
 		public ConcurrentQueue<Message> writeQueue = new ConcurrentQueue<Message>();
 
@@ -95,7 +94,7 @@ namespace MotoComManager {
 
 					Console.WriteLine("after {0:x}", BitConverter.ToUInt32(sync, 0));// & 0x7FFF);
 					stream.Flush();
-				} while (0xFF000 != BitConverter.ToInt32(sync, 0) && attempts++ < 100);
+				} while (0xFF000 != BitConverter.ToInt32(sync, 0) && attempts++ < 10);
 			}
 			catch {
 				//TODO: error handling
@@ -151,6 +150,10 @@ namespace MotoComManager {
 				throw new NotImplementedException();
 			}
 		}
+	}
+
+	public partial class ArduinoDriver {
+		public override string ToString() => "[" + stream.PortName + ", " + stream.BaudRate + "]";
 	}
 
 	static class SerialPortStreamExtentions {
