@@ -54,6 +54,8 @@ bool isTestMode = false;
 int counter = 0;
 int mode = 0;
 
+bool wasActivated = false;
+
 void setup() {
   Serial.begin(9600);
   radio.begin();
@@ -83,6 +85,11 @@ void setup() {
 void loop() {
 
   controll.run();
+
+  if(!wasActivated){
+    sendActivationBeacon();
+    return;
+    }
 
   /// Writing to pipe
   if (wasButton1Pressed) {
@@ -126,10 +133,37 @@ void loop() {
     uint32_t text = {0};
     radio.read(&text, sizeof(text));
     handleMessage(text);
-
-    //Serial.println(text);
+    Serial.println(text);
   }
 }
+
+void sendActivationBeacon() {
+
+  /// Writing to pipe
+  if (wasButton1Pressed) {
+    radio.openWritingPipe(addresses[0]);
+    radio.stopListening();
+    uint32_t messege = 0;
+    messege = makeMessage(0, All, Fire) ;
+    const char sendText[] = "Hi";
+    radio.write(&messege, sizeof(messege));
+    wasButton1Pressed =  false;
+    delay(50);
+
+  }
+  /// Reading from pipe
+  radio.openReadingPipe(1, addresses[0]);
+  radio.startListening();
+  if (radio.available())
+  {
+    uint32_t text = {0};
+    radio.read(&text, sizeof(text));
+    handleMessage(text);
+
+    Serial.println("Connected");
+  }
+}
+
 
 // callback for inputButtonThread
 void chackInputButtons() {
