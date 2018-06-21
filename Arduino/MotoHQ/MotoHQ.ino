@@ -68,7 +68,7 @@ if (Serial.available()) {
     while (0 < Serial.available()) buffer[count++] = Serial.read();
     msg = (*(uint32_t*)buffer);
 
-    if (0xFF000 == msg){
+    if (0x7F000 == msg){
       digitalWrite(3, HIGH);
       sendMsgToComputer(msg);
       delay(500);

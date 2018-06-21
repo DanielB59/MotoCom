@@ -63,7 +63,8 @@ namespace MotoComManager {
 			builder.Append(", to: " + this[Field.to]);
 			builder.Append(", broadcastType: " + this[Field.broadcastType]);
 			builder.Append(", senderType: " + this[Field.senderType]);
-			builder.Append(", Data: " + this[Field.messageData] + "]");
+			builder.Append(", Data: " + this[Field.messageData]);
+			builder.Append(" | value: " + MessageValue + "]");
 			return builder.ToString();
 		}
 	}

@@ -106,8 +106,8 @@ namespace MotoComManager {
 				else if (Console.KeyAvailable) {
 					if (Console.ReadKey().Key == ConsoleKey.A) {
 						Console.WriteLine("sending");
-						test = new Message();
-						test[Message.Field.messageData] = (UInt32)Message.MessageData.retreat;
+						test = new Message(0x7f000);
+						//test[Message.Field.messageData] = (UInt32)Message.MessageData.retreat;
 						Console.WriteLine("{0:x}: {1} :{2}", test.MessageValue, test, test.MessageValue);
 						myDriver.writeQueue.Enqueue(test);
 						myDriver.write();
