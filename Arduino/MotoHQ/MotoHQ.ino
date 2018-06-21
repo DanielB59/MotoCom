@@ -81,15 +81,11 @@ void chackComputerForInput() {
 
 void chackComputerActivation() {
 
-<<<<<<< HEAD
-    if (0x7F000 == msg){
-=======
   if (Serial.available()) {
     uint32_t msg = getMsgFromSerial();
 
-    if (0xFF000 == msg) {
+    if (0x7F000 == msg) {
       wasActivated = true;
->>>>>>> 50f815c9cae67338c5185da2673c83336efb84c0
       digitalWrite(3, HIGH);
       sendMsgToComputer(msg);
       delay(200);
