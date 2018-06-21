@@ -26,6 +26,8 @@ ThreadController controll = ThreadController();
 Thread radioListenerThread = Thread();
 Thread computerListenerThread = Thread();
 
+bool wasActivated = false;
+
 void setup() {
   pinMode(2, OUTPUT);
   pinMode(3, OUTPUT);
@@ -41,9 +43,13 @@ void setup() {
 
   // Adds both threads to the controller
   controll.add(&radioListenerThread);
-  controll.add(&computerListenerThread); // & to pass the pointer to it
+  controll.add(&computerListenerThread);
 }
 void chackRadioForInput() {
+  /// Chack if motoHQ is active and connected to HQ PC
+  if (!wasActivated) {
+    return;
+  }
   /// Reading from pipe
   radio.openReadingPipe(1, addresses[0]);
   radio.startListening();
@@ -58,41 +64,63 @@ void chackRadioForInput() {
   }
 }
 void chackComputerForInput() {
-  byte buffer[sizeof(uint32_t)] = {0};
-  uint32_t count = 0, msg = 0;
-if (Serial.available()) {
-  digitalWrite(2, HIGH);
-      delay(500);
+  if (!wasActivated) {
+    chackComputerActivation();
+    return;
+  }
+  if (Serial.available()) {
+
+    digitalWrite(2, HIGH);
+    uint32_t msg = getMsgFromSerial();;
+    sendMsgToRadio(msg);
+    delay(200);
     digitalWrite(2, LOW);
 
-    while (0 < Serial.available()) buffer[count++] = Serial.read();
-    msg = (*(uint32_t*)buffer);
+  }
+}
 
+void chackComputerActivation() {
+
+<<<<<<< HEAD
     if (0x7F000 == msg){
+=======
+  if (Serial.available()) {
+    uint32_t msg = getMsgFromSerial();
+
+    if (0xFF000 == msg) {
+      wasActivated = true;
+>>>>>>> 50f815c9cae67338c5185da2673c83336efb84c0
       digitalWrite(3, HIGH);
       sendMsgToComputer(msg);
-      delay(500);
+      delay(200);
       digitalWrite(3, LOW);
-    }else {
-      sendMsgToRadio(msg);
     }
   }
 }
+
+uint32_t getMsgFromSerial() {
+  byte buffer[sizeof(uint32_t)] = {0};
+  uint32_t count = 0, msg = 0;
+  while (0 < Serial.available()) buffer[count++] = Serial.read();
+  msg = (*(uint32_t*)buffer);
+  return msg;
+}
+
 /// To Fill Daniel
-void sendMsgToComputer(uint32_t msg){
+void sendMsgToComputer(uint32_t msg) {
   Serial.write((byte*)&msg, sizeof(msg));
   Serial.flush();
 }
 /// To Fill by michael
-void sendMsgToRadio(uint32_t msg){
-    radio.openWritingPipe(addresses[0]);
-    radio.stopListening();
-    radio.write(&msg, sizeof(msg));
-  }
+void sendMsgToRadio(uint32_t msg) {
+  radio.openWritingPipe(addresses[0]);
+  radio.stopListening();
+  radio.write(&msg, sizeof(msg));
+}
 
-  
-/// nothing to do here yet, just calling thred 
-// handeller to run all thredes  
+
+/// nothing to do here yet, just calling thred
+// handeller to run all thredes
 void loop() {
   controll.run();
 }
