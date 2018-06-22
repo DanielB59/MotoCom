@@ -23,7 +23,7 @@ namespace MotoComManager {
 
 			if (-1 == baud) {
 				stream.GetPortSettings();
-				baud = stream.BaudRate;
+				this.baud = stream.BaudRate;
 			}
 			else {
 				this.baud = baud;
@@ -47,6 +47,13 @@ namespace MotoComManager {
 		public void close() {
 			if (stream.IsOpen) stream.Close();
 		}
+
+		public void reOpen() {
+			close();
+			open();
+		}
+
+		public bool isOpen => stream.IsOpen;
 
 		#region IDisposable Support
 		private bool disposedValue = false;
@@ -75,38 +82,17 @@ namespace MotoComManager {
 		//SpinLock flushable = new SpinLock();	//TODO: is this required??
 
 		public bool synchronize() {
-			int attempts = 1, retrieved = 0, retryCount = 0;
-			//byte[] sync = null;
+			int attempts = 1;
 			Message sync = null;
 			try {
 				do {
 					sync = new Message(0x7F000);
-					byte[] sync2 = BitConverter.GetBytes(0x7F000);
-					//stream.EndWrite(stream.BeginWrite(sync, 0, Message.messageSize, null, null));
-					Console.WriteLine("before {0}", sync);
-					//stream.Write(sync, 0, Message.messageSize);
-					//stream.EndWrite(stream.BeginWrite(sync, null, null));
-					/*writeQueue.Enqueue(sync);
-					stream.EndWrite(write());*/
-					stream.EndWrite(stream.BeginWrite(sync2, 0, sizeof(UInt32), null, null));
-					//sync = BitConverter.GetBytes(Convert.ToUInt32(0x0));
+					writeQueue.Enqueue(sync);
+					stream.EndWrite(write());
+					stream.Flush();
 					sync = null;
-					Console.WriteLine("clean {0}", sync);
-					//stream.EndRead(stream.BeginRead(sync, 0, Message.messageSize, null, null));
-					//stream.Read(sync, 0, Message.messageSize);
-					//stream.BeginRead(out sync, null, null);
 					stream.EndRead(read());
-					Console.WriteLine(readQueue.IsEmpty);
 					readQueue.TryDequeue(out sync);
-					Console.WriteLine(sync);
-					Console.WriteLine("----------------------");
-					//while (retrieved < Message.messageSize && retryCount++ < 100)
-					//sync[retrieved++] = stream.ReadByte();
-					//retrieved += stream.Read(sync, retrieved, Message.messageSize - retrieved);
-
-					//Console.WriteLine("after {0:x}, {1}", BitConverter.ToUInt32(sync, 0), 0xFF000 != BitConverter.ToInt32(sync, 0) && attempts < 10);// & 0x7FFF);
-					Console.WriteLine("after {0} {1}", sync, sync.MessageValue.Equals(0x7F000));
-					if (sync.MessageValue.Equals(0x7F000)) Console.WriteLine("derp...");
 					stream.Flush();
 				} while (0x7F000 != sync.MessageValue && attempts++ < 10);
 			}
@@ -114,33 +100,24 @@ namespace MotoComManager {
 				//TODO: error handling
 				return false;
 			}
-			if (attempts < 10) Console.WriteLine("Horray!!");
 			return (attempts < 10) ? true : false;
 		}
 
 		public IAsyncResult read(AsyncCallback callback = null, object state = null) {
 			Message readMessage = new Message();
-			Console.WriteLine("----------------------");
+			
 			try {
-				Console.WriteLine("{0}, {1}", stream.CanRead, 0 < stream.BytesToRead);
-				if (stream.CanRead && 0 < stream.BytesToRead) {
-					Console.WriteLine("in");
+				if (stream.CanRead) {// && 0 < stream.BytesToRead) {	//TODO: fix, no idea why this isn't working properly...
 					callback += (IAsyncResult result) => {  //TODO: modify/enhance
 						if (result.IsCompleted) {
 							readMessage.MessageValue = BitConverter.ToUInt32(readMessage.MessageBytes, 0);
 							readQueue.Enqueue(readMessage);
-							Console.WriteLine("enqueued");
 						}
 					};
-					Console.WriteLine("+++++++++++++++++++");
 					return stream.BeginRead(out readMessage, callback, state);
-					/*callback(null);
-					return res;*/
 				}
-				else {
-					Console.WriteLine("hi");
+				else
 					return null;
-				}
 			}
 			catch (Exception e) {
 				//TODO: error handling
@@ -152,11 +129,9 @@ namespace MotoComManager {
 		public IAsyncResult write(AsyncCallback callback = null, object state = null) {
 			Message writeMessage = null;
 			try {
-				callback += (res) => Console.WriteLine("sent");
 				if (stream.CanWrite) {
-					if (writeQueue.TryDequeue(out writeMessage)) {
+					if (writeQueue.TryDequeue(out writeMessage))
 						return stream.BeginWrite(writeMessage, callback, state);
-					}
 					else
 						return null;
 				}

@@ -10,7 +10,7 @@ using RJCP.IO;
 using RJCP.IO.Ports;
 
 namespace MotoComManager {
-	partial class ArduinoDao : IDisposable {
+	public partial class ArduinoDao : IDisposable {
 		private static ArduinoDao instance = null;
 
 		public static ArduinoDao Instance {
@@ -46,14 +46,14 @@ namespace MotoComManager {
 		#endregion
 	}
 
-	partial class ArduinoDao {
+	public partial class ArduinoDao {
 		ArduinoDriver selectedDriver = null;
 		string selectedPort = null;
 		public Dictionary<string, ArduinoDriver> drivers = new Dictionary<string, ArduinoDriver>();
 		public ObservableCollection<ArduinoDriver> viewList = new ObservableCollection<ArduinoDriver>();
 	}
 
-	partial class ArduinoDao {
+	public partial class ArduinoDao {
 		public void enqueueMessage(Message msg) {
 			selectedDriver.writeQueue.Enqueue(msg);
 		}
@@ -63,30 +63,29 @@ namespace MotoComManager {
 		}
 
 		public void scanDevices() {
-			ArduinoDriver driver = null;
-			//Func<bool> sync = null;
-			//Task<bool> sync = null;
 			viewList.Clear();
 			foreach (PortDescription port in SerialPortStream.GetPortDescriptions()) {
+				ArduinoDriver driver = null;
 				try {
 					if (!drivers.ContainsKey(port.Port)) {
 						driver = new ArduinoDriver(port.Port);
-						drivers.Add(port.Port, driver);
-						viewList.Add(driver);
-					}
-					else
-						try {
-							Console.WriteLine("before");
-							driver = drivers[port.Port];
-							driver.synchronize();
+						if (driver.synchronize()) {
+							drivers.Add(port.Port, driver);
 							viewList.Add(driver);
-							Console.WriteLine("after");
 						}
-						catch {
+						else
+							driver.Dispose();
+					}
+					else {
+						driver = drivers[port.Port];
+						driver.reOpen();
+						if (driver.synchronize())
+							viewList.Add(driver);
+						else {
 							drivers.Remove(port.Port);
-							throw;
+							driver.Dispose();
 						}
-						
+					}
 				}
 				catch {
 					if (null != driver)
