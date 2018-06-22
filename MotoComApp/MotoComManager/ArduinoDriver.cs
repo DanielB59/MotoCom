@@ -32,6 +32,7 @@ namespace MotoComManager {
 
 			stream.ReadTimeout = ReadTimeout;
 			stream.WriteTimeout = WriteTimeout;
+			//stream.Handshake = Handshake.Rts;
 			open();
 			synchronize();
 		}
@@ -81,8 +82,9 @@ namespace MotoComManager {
 
 		//SpinLock flushable = new SpinLock();	//TODO: is this required??
 
+		const int limit = 5;
 		public bool synchronize() {
-			int attempts = 1;
+			int attempts = 0;
 			Message sync = null;
 			try {
 				do {
@@ -92,15 +94,15 @@ namespace MotoComManager {
 					stream.Flush();
 					sync = null;
 					stream.EndRead(read());
-					readQueue.TryDequeue(out sync);
 					stream.Flush();
-				} while (0x7F000 != sync.MessageValue && attempts++ < 10);
+					readQueue.TryDequeue(out sync);
+				} while (0x7F000 != sync.MessageValue && attempts++ < limit);
 			}
 			catch {
 				//TODO: error handling
 				return false;
 			}
-			return (attempts < 10) ? true : false;
+			return (attempts < limit) ? true : false;
 		}
 
 		public IAsyncResult read(AsyncCallback callback = null, object state = null) {
@@ -108,7 +110,7 @@ namespace MotoComManager {
 			
 			try {
 				if (stream.CanRead) {// && 0 < stream.BytesToRead) {	//TODO: fix, no idea why this isn't working properly...
-					callback += (IAsyncResult result) => {  //TODO: modify/enhance
+					callback += (result) => {
 						if (result.IsCompleted) {
 							readMessage.MessageValue = BitConverter.ToUInt32(readMessage.MessageBytes, 0);
 							readQueue.Enqueue(readMessage);
@@ -129,14 +131,11 @@ namespace MotoComManager {
 		public IAsyncResult write(AsyncCallback callback = null, object state = null) {
 			Message writeMessage = null;
 			try {
-				if (stream.CanWrite) {
+				if (stream.CanWrite)
 					if (writeQueue.TryDequeue(out writeMessage))
 						return stream.BeginWrite(writeMessage, callback, state);
-					else
-						return null;
-				}
-				else
-					return null;
+				
+				return null;
 			}
 			catch (Exception e) {
 				//TODO: error handling

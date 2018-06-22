@@ -6,12 +6,31 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using static MotoComManager.Message;
+
 using RJCP.IO;
 using RJCP.IO.Ports;
 
 namespace MotoComManager {
 	class Program2 {
 		static void Main(string[] args) {
+			Message msg = new Message();
+			msg[Field.from] = 0x5;
+			msg[Field.to] = 0xD;
+			msg[Field.broadcastType] = (UInt32)BroadcastType.control;
+			msg[Field.senderType] = (UInt32)SenderType.soldier;
+			msg[Field.messageData] = (UInt32)MessageData.stopFire;
+			Console.WriteLine(msg);
+			byte[] bytes = new byte[sizeof(UInt32)];
+			ArduinoDriver driver = new ArduinoDriver("COM5");
+			driver.synchronize();
+			do { while (0 >= driver.stream.BytesToRead) ;
+			driver.read();
+			Message msg1 = null;
+			driver.readQueue.TryDequeue(out msg1);
+			Console.WriteLine(msg);
+			}while (true);
+			return;
 			ArduinoDao.Instance.scanDevices();
 			foreach (ArduinoDriver ard in ArduinoDao.Instance.drivers.Values) {
 				Console.WriteLine(ard);
