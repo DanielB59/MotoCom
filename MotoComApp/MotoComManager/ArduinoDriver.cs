@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 using RJCP.IO;
 using RJCP.IO.Ports;
+using System.Collections.ObjectModel;
 
 namespace MotoComManager {
 	public partial class ArduinoDriver {
@@ -73,6 +74,8 @@ namespace MotoComManager {
 			Dispose(true);
 			GC.SuppressFinalize(this);
 		}
+
+		public bool isDisposed => disposedValue;
 		#endregion
 	}
 

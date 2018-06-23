@@ -21,7 +21,32 @@ namespace MotoComManager {
 			}
 		}
 
-		private ArduinoDao() { }
+		private ArduinoDao() {
+			//TODO: move to App
+			Task.Run(() => {
+				while (true) {
+					try {
+						if (flag) {
+							ArduinoDriver[] copy = new ArduinoDriver[10];
+							Instance.viewList.CopyTo(copy, 0);
+							foreach (ArduinoDriver driver in copy) {
+								if (null != driver && !driver.isDisposed) {
+									if (0 < driver.stream.BytesToRead) {
+										driver.read();
+									}
+									Message msg = null;
+									driver.readQueue.TryDequeue(out msg);
+									if (null != msg)
+										MainWindow.dispatcher.InvokeAsync(() => inBoundList.Insert(0, msg));
+								}
+							}
+						}
+					}
+					catch {
+					}
+				}
+			});
+		}
 
 		~ArduinoDao() => Dispose(false);
 
@@ -43,14 +68,18 @@ namespace MotoComManager {
 			Dispose(true);
 			GC.SuppressFinalize(this);
 		}
+
+		public bool isDisposed => disposedValue;
 		#endregion
 	}
 
 	public partial class ArduinoDao {
-		ArduinoDriver selectedDriver = null;
-		string selectedPort = null;
+		public ArduinoDriver selectedDriver = null;
 		public Dictionary<string, ArduinoDriver> drivers = new Dictionary<string, ArduinoDriver>();
+
 		public ObservableCollection<ArduinoDriver> viewList = new ObservableCollection<ArduinoDriver>();
+		public ObservableCollection<Message> inBoundList = new ObservableCollection<Message>();
+		public ObservableCollection<Message> outBoundList = new ObservableCollection<Message>();
 	}
 
 	public partial class ArduinoDao {
@@ -62,8 +91,10 @@ namespace MotoComManager {
 			selectedDriver.readQueue.TryDequeue(out msg);
 		}
 
+		volatile bool flag = true;
 		public void scanDevices() {
-			viewList.Clear();
+			flag = false;
+			MainWindow.dispatcher.InvokeAsync(viewList.Clear);
 			foreach (PortDescription port in SerialPortStream.GetPortDescriptions()) {
 				ArduinoDriver driver = null;
 				try {
@@ -71,7 +102,7 @@ namespace MotoComManager {
 						driver = new ArduinoDriver(port.Port);
 						if (driver.synchronize()) {
 							drivers.Add(port.Port, driver);
-							viewList.Add(driver);
+							MainWindow.dispatcher.InvokeAsync(() => viewList.Add(driver));
 						}
 						else
 							driver.Dispose();
@@ -80,7 +111,7 @@ namespace MotoComManager {
 						driver = drivers[port.Port];
 						driver.reOpen();
 						if (driver.synchronize())
-							viewList.Add(driver);
+							MainWindow.dispatcher.InvokeAsync(() => viewList.Add(driver));
 						else {
 							drivers.Remove(port.Port);
 							driver.Dispose();
@@ -91,6 +122,7 @@ namespace MotoComManager {
 					if (null != driver)
 						driver.Dispose();
 				}
+				flag = true;
 			}
 		}
 	}
