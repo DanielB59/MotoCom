@@ -92,9 +92,9 @@ namespace MotoComManager {
 		}
 
 		volatile bool flag = true;
-		public void scanDevices() {
+		public void scanDevices(bool test = false) {
 			flag = false;
-			MainWindow.dispatcher.InvokeAsync(viewList.Clear);
+			if (!test) MainWindow.dispatcher.InvokeAsync(viewList.Clear);
 			foreach (PortDescription port in SerialPortStream.GetPortDescriptions()) {
 				ArduinoDriver driver = null;
 				try {
@@ -102,7 +102,7 @@ namespace MotoComManager {
 						driver = new ArduinoDriver(port.Port);
 						if (driver.synchronize()) {
 							drivers.Add(port.Port, driver);
-							MainWindow.dispatcher.InvokeAsync(() => viewList.Add(driver));
+							if (!test) MainWindow.dispatcher.InvokeAsync(() => viewList.Add(driver));
 						}
 						else
 							driver.Dispose();
@@ -111,7 +111,7 @@ namespace MotoComManager {
 						driver = drivers[port.Port];
 						driver.reOpen();
 						if (driver.synchronize())
-							MainWindow.dispatcher.InvokeAsync(() => viewList.Add(driver));
+							if (!test) MainWindow.dispatcher.InvokeAsync(() => viewList.Add(driver));
 						else {
 							drivers.Remove(port.Port);
 							driver.Dispose();

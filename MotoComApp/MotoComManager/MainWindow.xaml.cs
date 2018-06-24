@@ -28,6 +28,7 @@ namespace MotoComManager {
 
 		public ObservableCollection<Message> inBoundList = ArduinoDao.Instance.inBoundList;
 		public ObservableCollection<Message> outBoundList = ArduinoDao.Instance.outBoundList;
+		public ObservableCollection<UInt32> toList = new ObservableCollection<UInt32> { 0 };
 
 		//temporary solution
 		public static MainWindow instance = null;
@@ -41,7 +42,8 @@ namespace MotoComManager {
 			inboundLog.ItemsSource = inBoundList;
 			outboundLog.ItemsSource = outBoundList;
 
-			toBox.ItemsSource = null;
+			toBox.ItemsSource = toList;
+			toBox.SelectedIndex = 0;
 			castTypeBox.ItemsSource = Enum.GetValues(typeof(Message.BroadcastType));
 			castTypeBox.SelectedIndex = 0;
 			dataBox.ItemsSource = Enum.GetValues(typeof(Message.MessageData));
@@ -91,6 +93,7 @@ namespace MotoComManager {
 						switch (msg[Message.Field.messageData]) {
 							case (UInt32)Message.MessageData.requestID:
 								messageSend(new Message(0x0, Counter, Message.BroadcastType.single, Message.SenderType.external, Message.MessageData.assignID));
+								Dispatcher.InvokeAsync(() => toList.Add(counter));
 								break;
 							default:
 								Console.WriteLine("a message was recieved!");
@@ -111,6 +114,21 @@ namespace MotoComManager {
 				selectLabel.Content = driver.ToString();
 			else
 				selectLabel.Content = "<selected>";
+		}
+
+		private void simuButton_Click(object sender, RoutedEventArgs e) {
+			Task.Run(() => {
+				if (null != ArduinoDao.Instance.selectedDriver)
+					Dispatcher.InvokeAsync(() => {
+						Message msg = new Message();
+						msg[Message.Field.from] = 0;  //TODO: fix?
+						msg[Message.Field.to] = 0;  //TODO: fix
+						msg[Message.Field.broadcastType] = (UInt32)(Message.BroadcastType)castTypeBox.SelectedItem;
+						msg[Message.Field.senderType] = (UInt32)Message.SenderType.hq;  //TODO: ok?
+						msg[Message.Field.messageData] = (UInt32)(Message.MessageData)dataBox.SelectedItem;
+						inBoundList.Add(msg);
+					});
+			});
 		}
 	}
 }

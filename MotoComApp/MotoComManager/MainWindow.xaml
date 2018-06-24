@@ -38,7 +38,8 @@
 				<Label Content="Message Type: (data)" HorizontalAlignment="Stretch" VerticalAlignment="Top"/>
 				<ComboBox x:Name="dataBox" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Width="120"/>
 			</StackPanel>
-			<Button x:Name="sendButton" Click="sendButton_Click" Margin="5" Content="Send" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Padding="5" Width="120"/>
+			<Button x:Name="sendButton" Click="sendButton_Click" Margin="5" Content="Send" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Padding="5" Width="100"/>
+			<Button Name="simuButton" Click="simuButton_Click" Margin="5" Content="Simulate recieve" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Padding="5" Width="100"/>
 		</WrapPanel>
 		<GridSplitter HorizontalAlignment="Stretch" Margin="220,73,-0.4,0" VerticalAlignment="top" Height="5"/>
 		<Label Content="Inbound" Margin="225,83,499.6,407.8"/>

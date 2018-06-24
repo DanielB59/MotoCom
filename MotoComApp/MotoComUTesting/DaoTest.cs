@@ -21,7 +21,7 @@ namespace MotoComUTesting {
 		[TestMethod]
 		public void testDeviceScan() {
 			try {
-				dao.scanDevices();
+				dao.scanDevices(true);
 				if (0 < dao.drivers.Count)
 					Assert.IsTrue(true);
 				else
