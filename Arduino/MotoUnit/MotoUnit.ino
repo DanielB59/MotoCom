@@ -100,6 +100,8 @@ void loop() {
     const char sendText[] = "Hi";
     radio.write(&messege, sizeof(messege));
     wasButton1Pressed =  false;
+    Serial.print("Reques ID Sent with : ");
+    Serial.println(messege);
     delay(50);
 
   } else if (wasButton2Pressed) {
@@ -110,6 +112,8 @@ void loop() {
     const char sendText[] = "Hi";
     radio.write(&messege, sizeof(messege));
     wasButton2Pressed =  false;
+    Serial.print("Reques ID Sent with : ");
+    Serial.println(messege);
     delay(50);
 
   }
@@ -121,6 +125,8 @@ void loop() {
     const char sendText[] = "Hi";
     radio.write(&messege, sizeof(messege));
     wasButton3Pressed =  false;
+    Serial.print("Reques ID Sent with : ");
+    Serial.println(messege);
     delay(50);
 
   }
@@ -144,10 +150,11 @@ void sendActivationBeacon() {
     radio.openWritingPipe(addresses[0]);
     radio.stopListening();
     uint32_t messege = 0;
-    messege = makeMessage(0, All, Fire) ;
+    messege = makeMessage(0, Control, ReqestID) ;
     const char sendText[] = "Hi";
     radio.write(&messege, sizeof(messege));
     wasButton1Pressed =  false;
+    Serial.println("Reques ID Sent");
     delay(50);
 
   }
