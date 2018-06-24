@@ -10,6 +10,9 @@
 enum Brodcast_Type { All = 0, Single = 1,
                      Control = 2, Distress = 3
                    };
+enum Sender_Type { Soldier = 0, Commander = 1,
+                     HQ = 2, Extrnal = 3
+                   };
 enum MessageData { Fire = 0, stopFire = 1,
                    Advance = 2, Reatrat = 3,
                    Ack = 4 , ReqestID = 5 , AssignID = 6,
@@ -55,13 +58,19 @@ int counter = 0;
 int mode = 0;
 
 bool wasActivated = false;
+bool wasRequestIdSent = false;
+uint8_t motounitAdress = 0;
+Sender_Type unitType = Soldier;
 
 void setup() {
   Serial.begin(9600);
   radio.begin();
 
   Serial.print("is Chip Connected = " );
-  Serial.println(radio.isChipConnected());
+ Serial.println(radio.isChipConnected());
+
+ // uint32_t  messege = makeMessage(0, Single, Fire) ;
+  // handleMessage(messege);
 
   pinMode(ledG, OUTPUT);
   pinMode(ledR, OUTPUT);
@@ -100,7 +109,7 @@ void loop() {
     const char sendText[] = "Hi";
     radio.write(&messege, sizeof(messege));
     wasButton1Pressed =  false;
-    Serial.print("Reques ID Sent with : ");
+   // Serial.print("Reques ID Sent with : ");
     Serial.println(messege);
     delay(50);
 
@@ -112,7 +121,7 @@ void loop() {
     const char sendText[] = "Hi";
     radio.write(&messege, sizeof(messege));
     wasButton2Pressed =  false;
-    Serial.print("Reques ID Sent with : ");
+   // Serial.print("Reques ID Sent with : ");
     Serial.println(messege);
     delay(50);
 
@@ -125,7 +134,7 @@ void loop() {
     const char sendText[] = "Hi";
     radio.write(&messege, sizeof(messege));
     wasButton3Pressed =  false;
-    Serial.print("Reques ID Sent with : ");
+   // Serial.print("Reques ID Sent with : ");
     Serial.println(messege);
     delay(50);
 
@@ -155,9 +164,14 @@ void sendActivationBeacon() {
     radio.write(&messege, sizeof(messege));
     wasButton1Pressed =  false;
     Serial.println("Reques ID Sent");
+    wasRequestIdSent = true;
     delay(50);
 
   }
+
+  if(!wasRequestIdSent){
+    return;
+    }
   /// Reading from pipe
   radio.openReadingPipe(1, addresses[0]);
   radio.startListening();
@@ -166,7 +180,7 @@ void sendActivationBeacon() {
     uint32_t text = {0};
     radio.read(&text, sizeof(text));
     handleMessage(text);
-
+    wasActivated = true;
     Serial.println("Connected");
   }
 }
@@ -260,13 +274,22 @@ void handleMessage(uint32_t text) {
   MessageData data = GetData( text);
   Serial.print("data = " );
   Serial.println(data);
-  uint8_t adress = GetAdress(text, ReciverAdress);
+  uint8_t recAdress = GetReciverAdress(text);
   Serial.print("Reciver Adress = " );
-  Serial.println(adress);
+  Serial.println(recAdress);
+  uint8_t sendAdress = GetSenderAdress(text);
+  Serial.print("Sender Adress = " );
+  Serial.println(sendAdress);
+  Sender_Type senderType = GetSenderType( text);
+  Serial.print("Sender Type = " );
+  Serial.println(senderType);
+  
+
+  
   if (type == All) {
     outputMessageData(data);
   }
-  else if (type == Single && motoUnitAdress == adress) {
+  else if (type == Single && motoUnitAdress == recAdress) {
     outputMessageData(data);
 
   }
@@ -300,10 +323,10 @@ void outputMessageData(MessageData data) {
 
 uint32_t makeMessage(uint8_t reciver, Brodcast_Type type, MessageData data) {
   uint32_t messege = 0;
-  messege = setBits(messege, 0, SenderAdress);
+  messege = setBits(messege, motounitAdress, SenderAdress);
   messege = setBits(messege, reciver, ReciverAdress);
   messege = setBits(messege, type, BrodcastType);
-  messege = setBits(messege, 0, SenderType);
+  messege = setBits(messege, unitType, SenderType);
   messege = setBits(messege, data, Data);
   return messege;
 }
@@ -317,6 +340,14 @@ uint32_t setBits(uint32_t messege, uint8_t adress, int startPoint) {
   }
   return messege;
 
+}
+
+uint8_t GetSenderAdress(uint32_t messege) {
+  return GetAdress(messege, SenderAdress);
+}
+
+uint8_t GetReciverAdress(uint32_t messege) {
+  return GetAdress(messege, ReciverAdress);
 }
 
 uint8_t GetAdress(uint32_t messege, int offset) {
@@ -340,6 +371,16 @@ MessageData GetData(uint32_t messege) {
 
 Brodcast_Type GetBrodcastType(uint32_t messege) {
   int offset = BrodcastType;
+  uint8_t add = 0;
+  int count = 0;
+  for (int i = offset; i < offset + 4; i++) {
+    bitWrite(add, count++, bitRead(messege, i));
+  }
+  return add;
+}
+
+Sender_Type GetSenderType(uint32_t messege) {
+  int offset = SenderType;
   uint8_t add = 0;
   int count = 0;
   for (int i = offset; i < offset + 4; i++) {
