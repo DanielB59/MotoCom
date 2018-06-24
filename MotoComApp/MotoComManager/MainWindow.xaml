@@ -8,10 +8,10 @@
 		ResizeMode="CanResize"
 		MinHeight="480"
 		MinWidth="580"
-        Title="MotoCom Manager" Height="550" Width="900">
+        Title="MotoCom Manager" Height="550" Width="900" Closing="Window_Closing">
 	<Grid>
 		<GridSplitter VerticalAlignment="Stretch" Margin="215,0,0,0" HorizontalAlignment="Left" Width="5"/>
-		<ListBox Name="deviceList" ScrollViewer.CanContentScroll="True" HorizontalAlignment="Left" Margin="10,42,0,277.8" Width="200" SelectionMode="Single">
+		<ListBox Name="deviceList" SelectionChanged="deviceList_SelectionChanged" ScrollViewer.CanContentScroll="True" HorizontalAlignment="Left" Margin="10,42,0,277.8" Width="200" SelectionMode="Single">
 			<ListBox.ItemTemplate>
 				<DataTemplate>
 					<StackPanel Orientation="Horizontal">
@@ -23,8 +23,8 @@
 		<ListBox Name="clusterDevices" ScrollViewer.CanContentScroll="True" HorizontalAlignment="Left" Height="243" Margin="10,0,0,-0.2" VerticalAlignment="Bottom" Width="200">
 
 		</ListBox>
-		<Button Name="scanButton" Click="scanButton_Click" Content="Sync" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Padding="5" Width="90" Height="auto"/>
-		<Label Content="Label" Margin="105,10,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Width="105" Height="27"/>
+		<Button Name="syncButton" Click="syncButton_Click" Content="Sync" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Padding="5" Width="90" Height="auto"/>
+		<Label Name="selectLabel" Content="&lt;selected&gt;" Margin="105,10,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Width="105" Height="27"/>
 		<WrapPanel Orientation="Horizontal" Margin="225,10,9.6,0" VerticalAlignment="top">
 			<StackPanel Margin="5" Orientation="Vertical">
 				<Label Content="To:" HorizontalAlignment="Stretch" VerticalAlignment="Top"/>
@@ -38,13 +38,30 @@
 				<Label Content="Message Type: (data)" HorizontalAlignment="Stretch" VerticalAlignment="Top"/>
 				<ComboBox x:Name="dataBox" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Width="120"/>
 			</StackPanel>
-			<Button x:Name="sendButton" Click="sendButton_Click" Margin="5" Content="Send" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Padding="5" Width="120"/>
+			<Button x:Name="sendButton" Click="sendButton_Click" Margin="5" Content="Send" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Padding="5" Width="100"/>
+			<Button Name="simuButton" Click="simuButton_Click" Margin="5" Content="Simulate recieve" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Padding="5" Width="100"/>
 		</WrapPanel>
 		<GridSplitter HorizontalAlignment="Stretch" Margin="220,73,-0.4,0" VerticalAlignment="top" Height="5"/>
-		<Label Content="Inbound" Margin="225,83,500,312"/>
-		<ListBox Margin="225,113,9.6,0" ScrollViewer.CanContentScroll="True" IsEnabled="False" Height="130" VerticalAlignment="Top"/>
-		<Label Content="Outbound" Margin="225,248,500,147"/>
-		<ListBox Margin="225,278,9.6,10" ScrollViewer.CanContentScroll="True" IsEnabled="False"/>
+		<Label Content="Inbound" Margin="225,83,499.6,407.8"/>
+		<ListBox Name="inboundLog" Margin="225,113,9.6,0" ScrollViewer.CanContentScroll="True" Height="130" VerticalAlignment="Top">
+			<ListBox.ItemTemplate>
+				<DataTemplate>
+					<StackPanel Orientation="Horizontal">
+						<TextBlock Margin="2" Text="{Binding}"></TextBlock>
+					</StackPanel>
+				</DataTemplate>
+			</ListBox.ItemTemplate>
+		</ListBox>
+		<Label Content="Outbound" Margin="225,248,499.6,242.8"/>
+		<ListBox Name="outboundLog" Margin="225,278,9.6,10" ScrollViewer.CanContentScroll="True">
+			<ListBox.ItemTemplate>
+				<DataTemplate>
+					<StackPanel Orientation="Horizontal">
+						<TextBlock Margin="2" Text="{Binding}"></TextBlock>
+					</StackPanel>
+				</DataTemplate>
+			</ListBox.ItemTemplate>
+		</ListBox>
 		<Label Content="Label" HorizontalAlignment="Left" Margin="105,248,0,0" VerticalAlignment="Top" Width="105" Height="25"/>
 	</Grid>
 </Window>

@@ -32,6 +32,14 @@ namespace MotoComManager {
 			MessageValue = value;
 		}
 
+		public Message(UInt32 from, UInt32 to, BroadcastType castType, SenderType senderType, MessageData data) : this() {
+			this[Field.from] = from;
+			this[Field.to] = to;
+			this[Field.broadcastType] = (UInt32)castType;
+			this[Field.senderType] = (UInt32)senderType;
+			this[Field.messageData] = (UInt32)data;
+		}
+
 		public static implicit operator byte[] (Message message) {
 			return message.MessageBytes;
 		}

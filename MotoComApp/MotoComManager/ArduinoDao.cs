@@ -10,7 +10,7 @@ using RJCP.IO;
 using RJCP.IO.Ports;
 
 namespace MotoComManager {
-	partial class ArduinoDao : IDisposable {
+	public partial class ArduinoDao : IDisposable {
 		private static ArduinoDao instance = null;
 
 		public static ArduinoDao Instance {
@@ -21,7 +21,32 @@ namespace MotoComManager {
 			}
 		}
 
-		private ArduinoDao() { }
+		private ArduinoDao() {
+			//TODO: move to App
+			Task.Run(() => {
+				while (true) {
+					try {
+						if (flag) {
+							ArduinoDriver[] copy = new ArduinoDriver[10];
+							Instance.viewList.CopyTo(copy, 0);
+							foreach (ArduinoDriver driver in copy) {
+								if (null != driver && !driver.isDisposed) {
+									if (0 < driver.stream.BytesToRead) {
+										driver.read();
+									}
+									Message msg = null;
+									driver.readQueue.TryDequeue(out msg);
+									if (null != msg)
+										MainWindow.dispatcher.InvokeAsync(() => inBoundList.Insert(0, msg));
+								}
+							}
+						}
+					}
+					catch {
+					}
+				}
+			});
+		}
 
 		~ArduinoDao() => Dispose(false);
 
@@ -43,17 +68,21 @@ namespace MotoComManager {
 			Dispose(true);
 			GC.SuppressFinalize(this);
 		}
+
+		public bool isDisposed => disposedValue;
 		#endregion
 	}
 
-	partial class ArduinoDao {
-		ArduinoDriver selectedDriver = null;
-		string selectedPort = null;
+	public partial class ArduinoDao {
+		public ArduinoDriver selectedDriver = null;
 		public Dictionary<string, ArduinoDriver> drivers = new Dictionary<string, ArduinoDriver>();
+
 		public ObservableCollection<ArduinoDriver> viewList = new ObservableCollection<ArduinoDriver>();
+		public ObservableCollection<Message> inBoundList = new ObservableCollection<Message>();
+		public ObservableCollection<Message> outBoundList = new ObservableCollection<Message>();
 	}
 
-	partial class ArduinoDao {
+	public partial class ArduinoDao {
 		public void enqueueMessage(Message msg) {
 			selectedDriver.writeQueue.Enqueue(msg);
 		}
@@ -62,36 +91,38 @@ namespace MotoComManager {
 			selectedDriver.readQueue.TryDequeue(out msg);
 		}
 
-		public void scanDevices() {
-			ArduinoDriver driver = null;
-			//Func<bool> sync = null;
-			//Task<bool> sync = null;
-			viewList.Clear();
+		volatile bool flag = true;
+		public void scanDevices(bool test = false) {
+			flag = false;
+			if (!test) MainWindow.dispatcher.InvokeAsync(viewList.Clear);
 			foreach (PortDescription port in SerialPortStream.GetPortDescriptions()) {
+				ArduinoDriver driver = null;
 				try {
 					if (!drivers.ContainsKey(port.Port)) {
 						driver = new ArduinoDriver(port.Port);
-						drivers.Add(port.Port, driver);
-						viewList.Add(driver);
+						if (driver.synchronize()) {
+							drivers.Add(port.Port, driver);
+							if (!test) MainWindow.dispatcher.InvokeAsync(() => viewList.Add(driver));
+						}
+						else
+							driver.Dispose();
 					}
-					else
-						try {
-							Console.WriteLine("before");
-							driver = drivers[port.Port];
-							driver.synchronize();
-							viewList.Add(driver);
-							Console.WriteLine("after");
-						}
-						catch {
+					else {
+						driver = drivers[port.Port];
+						driver.reOpen();
+						if (driver.synchronize())
+							if (!test) MainWindow.dispatcher.InvokeAsync(() => viewList.Add(driver));
+						else {
 							drivers.Remove(port.Port);
-							throw;
+							driver.Dispose();
 						}
-						
+					}
 				}
 				catch {
 					if (null != driver)
 						driver.Dispose();
 				}
+				flag = true;
 			}
 		}
 	}
