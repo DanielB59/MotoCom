@@ -115,7 +115,6 @@ void loop() {
       radio.stopListening();
       uint32_t messege = 0;
       messege = makeMessage(0, All, Fire) ;
-      const char sendText[] = "Hi";
       radio.write(&messege, sizeof(messege));
       wasButton1Pressed =  false;
       Serial.println(messege);
