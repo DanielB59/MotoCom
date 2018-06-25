@@ -99,7 +99,7 @@ namespace MotoComManager {
 				ArduinoDriver driver = null;
 				try {
 					if (!drivers.ContainsKey(port.Port)) {
-						driver = new ArduinoDriver(port.Port);
+						driver = new ArduinoDriver(port.Port, 9600);
 						if (driver.synchronize()) {
 							drivers.Add(port.Port, driver);
 							if (!test) MainWindow.dispatcher.InvokeAsync(() => viewList.Add(driver));
