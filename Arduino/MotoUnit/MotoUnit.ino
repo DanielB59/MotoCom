@@ -67,6 +67,7 @@ int mode = 0;
 bool wasActivated = false;
 bool wasRequestIdSent = false;
 uint8_t motounitAdress = 0;
+uint8_t motounitClusterID = 0;
 Sender_Type unitType = HQ;
 
 void setup() {
@@ -98,6 +99,13 @@ void setup() {
   controll.add(&outputButtonThread); // & to pass the pointer to it
 }
 
+void writeToRadio(uint32_t messege) {
+  radio.openWritingPipe(addresses[0]);
+  radio.stopListening();
+  radio.write(&messege, sizeof(messege));
+  Serial.println(messege);
+}
+
 void loop() {
 
   controll.run();
@@ -108,62 +116,28 @@ void loop() {
   }
 
   /// Writing to pipe
-  if (wasButton1Pressed) {
-
-    if (button1Timer <= 0) {
-      radio.openWritingPipe(addresses[0]);
-      radio.stopListening();
-      uint32_t messege = 0;
-      messege = makeMessage(0, All, Fire) ;
-      radio.write(&messege, sizeof(messege));
-      wasButton1Pressed =  false;
-      Serial.println(messege);
-      delay(50);
-
-    } else {
-      button1Timer--;
-    }
+  if (wasButton1Pressed && button1Timer <= 0) {
+    uint32_t messege = makeMessage(0, All, Fire) ;
+    writeToRadio(messege);
+    wasButton1Pressed =  false;
+    delay(50);
     // Serial.print("Reques ID Sent with : ");
 
-  } else if (wasButton2Pressed) {
-
-    if (button2Timer <= 0) {
-      radio.openWritingPipe(addresses[0]);
-      radio.stopListening();
-      uint32_t messege = 0;
-      messege = makeMessage(0, All, stopFire) ;
-      const char sendText[] = "Hi";
-      radio.write(&messege, sizeof(messege));
-      wasButton2Pressed =  false;
-      Serial.println(messege);
-      delay(50);
-    } else {
-      button2Timer--;
-    }
-    // Serial.print("Reques ID Sent with : ");
-
-
+  } else if (wasButton2Pressed && button2Timer <= 0) {
+    uint32_t messege = makeMessage(0, All, stopFire) ;
+    writeToRadio(messege);
+    wasButton2Pressed =  false;
+    delay(50);
   }
-  else if (wasButton3Pressed) {
-
-    if (button3Timer <= 0) {
-      radio.openWritingPipe(addresses[0]);
-      radio.stopListening();
-      uint32_t messege = 0;
-      messege = makeMessage(0, All, Ack) ;
-      const char sendText[] = "Hi";
-      radio.write(&messege, sizeof(messege));
-      Serial.println(messege);
-      delay(50);
-      wasButton3Pressed =  false;
-    } else {
-      button3Timer--;
-    }
-    // Serial.print("Reques ID Sent with : ");
-
-
+  else if (wasButton3Pressed && button3Timer <= 0) {
+    uint32_t messege  = makeMessage(0, All, Ack) ;
+    writeToRadio(messege);
+    wasButton3Pressed =  false;
+    delay(50);
   }
-
+  button1Timer--;
+  button2Timer--;
+  button3Timer--;
   /// Reading from pipe
   radio.openReadingPipe(1, addresses[0]);
   radio.startListening();
