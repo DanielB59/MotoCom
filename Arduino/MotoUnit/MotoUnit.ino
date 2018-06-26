@@ -88,6 +88,9 @@ void setup() {
   pinMode(button2Pin, INPUT);
   pinMode(button3Pin, INPUT);
 
+  
+    digitalWrite(ledR, HIGH);  
+
   // Configure Threads
   inputButtonThread.onRun(chackInputButtons);
   inputButtonThread.setInterval(50);
@@ -181,6 +184,7 @@ void handleHandShkae() {
     Serial.println("Connected");
     motounitAdress = GetReciverAdress(text);
     motounitClusterID = GetClusterId(text);
+       digitalWrite(ledR, LOW);  
   }else{
     Serial.println("Not Connected");
     }
@@ -297,7 +301,8 @@ void handleMessage(uint32_t text) {
 void outputMessageData(MessageData data) {
   switch (data) {
     case Fire: {
-        redBlinkNumber = BlinkNumber;
+       // redBlinkNumber = BlinkNumber;
+         blueBlinkNumber = BlinkNumber;
         break;
       }
 
@@ -310,7 +315,7 @@ void outputMessageData(MessageData data) {
         break;
       }
     default: {
-
+        greenBlinkNumber = BlinkNumber;
         break;
       }
 
