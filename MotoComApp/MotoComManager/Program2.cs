@@ -14,7 +14,7 @@ using RJCP.IO.Ports;
 namespace MotoComManager {
 	class Program2 {
 		static void Main(string[] args) {
-            Message msg = new Message();
+			Message msg = new Message();
 			msg[Field.from] = 0x5;
 			msg[Field.to] = 0xD;
 			msg[Field.broadcastType] = (UInt32)BroadcastType.control;
@@ -24,12 +24,13 @@ namespace MotoComManager {
 			byte[] bytes = new byte[sizeof(UInt32)];
 			ArduinoDriver driver = new ArduinoDriver("COM5");
 			driver.synchronize();
-			do { while (0 >= driver.stream.BytesToRead) ;
-			driver.read();
-			Message msg1 = null;
-			driver.readQueue.TryDequeue(out msg1);
-			Console.WriteLine(msg);
-			}while (true);
+			do {
+				while (0 >= driver.stream.BytesToRead) ;
+				driver.read();
+				Message msg1 = null;
+				driver.readQueue.TryDequeue(out msg1);
+				Console.WriteLine(msg);
+			} while (true);
 			return;
 			ArduinoDao.Instance.scanDevices();
 			foreach (ArduinoDriver ard in ArduinoDao.Instance.drivers.Values) {

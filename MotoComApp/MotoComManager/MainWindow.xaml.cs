@@ -52,7 +52,7 @@ namespace MotoComManager {
 			clusterDevices.ItemsSource = toList;
 			castTypeBox.ItemsSource = Enum.GetValues(typeof(Message.BroadcastType));
 			castTypeBox.SelectedIndex = 0;
-			dataBox.ItemsSource = Enum.GetValues(typeof(Message.MessageData));
+			dataBox.ItemsSource = new Message.MessageData[] { Message.MessageData.fire, Message.MessageData.advance, Message.MessageData.retreat, Message.MessageData.stopFire };
 			dataBox.SelectedIndex = 0;
 
 			instance = this;
@@ -74,7 +74,7 @@ namespace MotoComManager {
 					Dispatcher.InvokeAsync(() => {
 						Message msg = new Message();
 						msg[Message.Field.from] = 0x0;  //TODO: fix?
-						msg[Message.Field.to] = (null != clusterDevices.SelectedItem)?(UInt32)(MotoUnitItem)clusterDevices.SelectedItem:0x0;  //TODO: fix
+						msg[Message.Field.to] = (null != clusterDevices.SelectedItem) ? (UInt32)(MotoUnitItem)clusterDevices.SelectedItem : 0x0;  //TODO: fix
 						msg[Message.Field.broadcastType] = (UInt32)(Message.BroadcastType)castTypeBox.SelectedItem;
 						msg[Message.Field.senderType] = (UInt32)Message.SenderType.hq;
 						msg[Message.Field.messageData] = (UInt32)(Message.MessageData)dataBox.SelectedItem;
@@ -98,7 +98,7 @@ namespace MotoComManager {
 						Message msg = e.NewItems[0] as Message;
 						switch (msg[Message.Field.messageData]) {
 							case (UInt32)Message.MessageData.requestID:
-								messageSend(new Message(0x0, Counter, Message.BroadcastType.single, Message.SenderType.hq, Message.MessageData.assignID, 0x0));
+								messageSend(new Message(0x0, Counter, Message.BroadcastType.single, Message.SenderType.hq, Message.MessageData.assignID, counter));
 								Dispatcher.InvokeAsync(() => toList.Add(new MotoUnitItem(counter)));
 								break;
 							default:

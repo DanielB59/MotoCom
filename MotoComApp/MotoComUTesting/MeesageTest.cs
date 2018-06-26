@@ -13,7 +13,7 @@ namespace MotoComUTesting {
 
 		[TestInitialize]
 		public void Initialization() {
-			
+
 		}
 
 		[TestMethod]
@@ -24,7 +24,7 @@ namespace MotoComUTesting {
 			msg[Field.broadcastType] = (UInt32)BroadcastType.distress;
 			msg[Field.senderType] = (UInt32)SenderType.soldier;
 			msg[Field.messageData] = (UInt32)MessageData.ack;
-            msg[Field.clusterID] = 0xC;
+			msg[Field.clusterID] = 0xC;
 			Assert.AreEqual((UInt32)0x3043456, msg.MessageValue | BitConverter.ToUInt32(msg.MessageBytes, 0));
 		}
 

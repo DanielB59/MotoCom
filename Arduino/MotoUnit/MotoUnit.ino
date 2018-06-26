@@ -78,8 +78,8 @@ void setup() {
   Serial.print("is Chip Connected = " );
   Serial.println(radio.isChipConnected());
 
-  uint32_t  messege = makeMessage(16, Single, IsConnected) ;
-  handleMessage(messege);
+  //uint32_t  messege = makeMessage(16, Single, IsConnected) ;
+  //handleMessage(messege);
 
   pinMode(ledG, OUTPUT);
   pinMode(ledR, OUTPUT);
@@ -93,7 +93,7 @@ void setup() {
 
   // Configure Threads
   inputButtonThread.onRun(chackInputButtons);
-  inputButtonThread.setInterval(50);
+  inputButtonThread.setInterval(0);
 
   outputButtonThread.onRun(blinkBlueLed);
   outputButtonThread.setInterval(400);
@@ -118,7 +118,15 @@ void loop() {
     sendActivationBeacon();
     return;
   }
-
+ if (button1Timer > 0) {
+    button1Timer--;
+  }
+  if (button2Timer > 0) {
+    button2Timer--;
+  }
+  if (button3Timer > 0) {
+    button3Timer--;
+  }
   /// Writing to pipe
   if (wasButton1Pressed && button1Timer <= 0) {
     uint32_t messege = makeMessage(0, All, Fire) ;
@@ -154,15 +162,23 @@ void loop() {
 
 void sendActivationBeacon() {
 
+      /// Reset Button Timers if needed
+  if (button1Timer > 0) {
+    button1Timer--;
+  }
+  if (button2Timer > 0) {
+    button2Timer--;
+  }
+  if (button3Timer > 0) {
+    button3Timer--;
+  }
   /// Writing to pipe
   if (wasButton1Pressed && button1Timer <= 0) {
     uint32_t messege  = makeMessage(0, Control, ReqestID) ;
-    //  writeToRadio(messege);
-    radio.openWritingPipe(addresses[0]);
-    radio.stopListening();
-    radio.write(&messege, sizeof(messege));
-    Serial.println(messege);
+      writeToRadio(messege);
+
     wasButton1Pressed =  false;
+    wasRequestIdSent = true;
     // delay(50);
   }
 
@@ -195,7 +211,7 @@ void handleHandShkae() {
 
 }
 
-int startTimer  = 1000;
+int startTimer  = 5000;
 // callback for inputButtonThread
 void chackInputButtons() {
 
@@ -223,16 +239,7 @@ void chackInputButtons() {
     }
   }
 
-  /// Reset Button Timers if needed
-  if (button1Timer > 0) {
-    button1Timer--;
-  }
-  if (button2Timer > 0) {
-    button2Timer--;
-  }
-  if (button3Timer > 0) {
-    button3Timer--;
-  }
+
 
 }
 

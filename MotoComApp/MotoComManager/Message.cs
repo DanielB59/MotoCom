@@ -38,7 +38,7 @@ namespace MotoComManager {
 			this[Field.broadcastType] = (UInt32)castType;
 			this[Field.senderType] = (UInt32)senderType;
 			this[Field.messageData] = (UInt32)data;
-            this[Field.clusterID] = clusterID;
+			this[Field.clusterID] = clusterID;
 		}
 
 		public static implicit operator byte[] (Message message) {
@@ -52,7 +52,7 @@ namespace MotoComManager {
 				case Field.broadcastType: return 12;
 				case Field.senderType: return 14;
 				case Field.messageData: return 16;
-                case Field.clusterID: return 22;
+				case Field.clusterID: return 22;
 				default: return -1;
 			}
 		}
@@ -74,8 +74,8 @@ namespace MotoComManager {
 			builder.Append(", broadcastType: " + this[Field.broadcastType]);
 			builder.Append(", senderType: " + this[Field.senderType]);
 			builder.Append(", Data: " + this[Field.messageData]);
-            builder.Append(", clusterID: " + this[Field.clusterID]);
-            builder.Append(" | value: " + MessageValue + "]");
+			builder.Append(", clusterID: " + this[Field.clusterID]);
+			builder.Append(" | value: " + MessageValue + "]");
 			return builder.ToString();
 		}
 	}

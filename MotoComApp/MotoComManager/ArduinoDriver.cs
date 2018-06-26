@@ -33,7 +33,10 @@ namespace MotoComManager {
 
 			stream.ReadTimeout = ReadTimeout;
 			stream.WriteTimeout = WriteTimeout;
-			//stream.Handshake = Handshake.Rts;
+			stream.Handshake = Handshake.Rts;
+			//stream.DataReceived += ArduinoDao.readHandler;
+			//stream.
+			stream.DataReceived += (s, e) => Task.Run(()=>Console.Write("hello"));
 			open();
 		}
 
@@ -89,28 +92,27 @@ namespace MotoComManager {
 			int attempts = 0;
 			Message sync = null;
 			try {
-                do {
-                    sync = new Message(0x7F000);
-                    writeQueue.Enqueue(sync);
-                    stream.EndWrite(write());
-                    stream.Flush();
-                    stream.EndRead(read());
-                    stream.Flush();
-                    Console.WriteLine(readQueue.TryDequeue(out sync));
-                    Console.WriteLine(sync);
-                } while (null == sync || (0x7F000 != sync.MessageValue && attempts++ < limit));
+				do {
+					sync = new Message(0x7F000);
+					writeQueue.Enqueue(sync);
+					stream.EndWrite(write());
+					stream.Flush();
+					sync = null;
+					stream.EndRead(read());
+					stream.Flush();
+					readQueue.TryDequeue(out sync);
+				} while (null == sync || (0x7F000 != sync.MessageValue && attempts++ < limit));
 			}
 			catch (Exception e) {
-                Console.WriteLine(e.StackTrace);
+				Console.WriteLine(e.StackTrace);
 				return false;
 			}
 			return (attempts < limit) ? true : false;
 		}
 
 		public IAsyncResult read(AsyncCallback callback = null, object state = null) {
-            IAsyncResult result = null;
-            Message readMessage = new Message();
-			
+			Message readMessage = new Message();
+
 			try {
 				if (stream.CanRead) {// && 0 < stream.BytesToRead) {	//TODO: fix, no idea why this isn't working properly...
 					callback += (res) => {
@@ -119,7 +121,7 @@ namespace MotoComManager {
 							readQueue.Enqueue(readMessage);
 						}
 					};
-                    return stream.BeginRead(out readMessage, callback, state);
+					return stream.BeginRead(out readMessage, callback, state);
 				}
 				else
 					return null;
@@ -137,7 +139,7 @@ namespace MotoComManager {
 				if (stream.CanWrite)
 					if (writeQueue.TryDequeue(out writeMessage))
 						return stream.BeginWrite(writeMessage, callback, state);
-				
+
 				return null;
 			}
 			catch (Exception e) {
@@ -153,8 +155,8 @@ namespace MotoComManager {
 	}
 
 	static class SerialPortStreamExtentions {
-        public static IAsyncResult BeginRead(this SerialPortStream stream, out Message message, AsyncCallback callback, object state)
-            => stream.BeginRead((message = new Message()).MessageBytes, 0, Message.messageSize, callback, state);
+		public static IAsyncResult BeginRead(this SerialPortStream stream, out Message message, AsyncCallback callback, object state)
+			=> stream.BeginRead((message = new Message()).MessageBytes, 0, Message.messageSize, callback, state);
 		public static IAsyncResult BeginWrite(this SerialPortStream stream, Message message, AsyncCallback callback, object state)
 			=> stream.BeginWrite(message.MessageBytes, 0, Message.messageSize, callback, state);
 	}
