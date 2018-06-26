@@ -118,7 +118,7 @@ void loop() {
     sendActivationBeacon();
     return;
   }
- if (button1Timer > 0) {
+  if (button1Timer > 0) {
     button1Timer--;
   }
   if (button2Timer > 0) {
@@ -162,7 +162,7 @@ void loop() {
 
 void sendActivationBeacon() {
 
-      /// Reset Button Timers if needed
+  /// Reset Button Timers if needed
   if (button1Timer > 0) {
     button1Timer--;
   }
@@ -175,7 +175,7 @@ void sendActivationBeacon() {
   /// Writing to pipe
   if (wasButton1Pressed && button1Timer <= 0) {
     uint32_t messege  = makeMessage(0, Control, ReqestID) ;
-      writeToRadio(messege);
+    writeToRadio(messege);
 
     wasButton1Pressed =  false;
     wasRequestIdSent = true;
@@ -298,13 +298,17 @@ void handleMessage(uint32_t text) {
   Serial.print("Cluster ID = " );
   Serial.println(clusterId);
 
-  if (type == All) {
-    outputMessageData(data);
-  }
-  else if (type == Single && motoUnitAdress == recAdress) {
-    outputMessageData(data);
+  if (clusterId == motounitClusterID) {
+    if (type == All || type == Distress) {
+      outputMessageData(data);
+    }
+    else if (type == Single && motoUnitAdress == recAdress) {
+      outputMessageData(data);
 
+    }
   }
+
+
 
 }
 
