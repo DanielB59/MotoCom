@@ -14,7 +14,7 @@ using RJCP.IO.Ports;
 namespace MotoComManager {
 	class Program2 {
 		static void Main(string[] args) {
-			Message msg = new Message();
+            Message msg = new Message();
 			msg[Field.from] = 0x5;
 			msg[Field.to] = 0xD;
 			msg[Field.broadcastType] = (UInt32)BroadcastType.control;

@@ -7,7 +7,7 @@ using System.Collections;
 
 namespace MotoComManager {
 	public class Message {
-		public enum Field : UInt32 { from = 0x3F, to = 0xFC0, broadcastType = 0x3000, senderType = 0xC000, messageData = 0x70000 };
+		public enum Field : UInt32 { from = 0x3F, to = 0xFC0, broadcastType = 0x3000, senderType = 0xC000, messageData = 0x3F0000, clusterID = 0x3C00000 };
 
 		public enum BroadcastType : UInt32 { all = 0, single = 1, control = 2, distress = 3 };
 		public enum SenderType : UInt32 { soldier = 0, commander = 1, hq = 2, external = 3 };
@@ -20,7 +20,7 @@ namespace MotoComManager {
 			get => messageValue;
 
 			set {
-				value &= 0x7FFFF;
+				value &= 0x3FFFFFF;
 				messageValue = value;
 				BitConverter.GetBytes(value).CopyTo(MessageBytes, 0);
 			}
@@ -32,12 +32,13 @@ namespace MotoComManager {
 			MessageValue = value;
 		}
 
-		public Message(UInt32 from, UInt32 to, BroadcastType castType, SenderType senderType, MessageData data) : this() {
+		public Message(UInt32 from, UInt32 to, BroadcastType castType, SenderType senderType, MessageData data, UInt32 clusterID) : this() {
 			this[Field.from] = from;
 			this[Field.to] = to;
 			this[Field.broadcastType] = (UInt32)castType;
 			this[Field.senderType] = (UInt32)senderType;
 			this[Field.messageData] = (UInt32)data;
+            this[Field.clusterID] = clusterID;
 		}
 
 		public static implicit operator byte[] (Message message) {
@@ -51,6 +52,7 @@ namespace MotoComManager {
 				case Field.broadcastType: return 12;
 				case Field.senderType: return 14;
 				case Field.messageData: return 16;
+                case Field.clusterID: return 22;
 				default: return -1;
 			}
 		}
@@ -72,7 +74,8 @@ namespace MotoComManager {
 			builder.Append(", broadcastType: " + this[Field.broadcastType]);
 			builder.Append(", senderType: " + this[Field.senderType]);
 			builder.Append(", Data: " + this[Field.messageData]);
-			builder.Append(" | value: " + MessageValue + "]");
+            builder.Append(", clusterID: " + this[Field.clusterID]);
+            builder.Append(" | value: " + MessageValue + "]");
 			return builder.ToString();
 		}
 	}
