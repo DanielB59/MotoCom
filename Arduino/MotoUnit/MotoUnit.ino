@@ -88,8 +88,8 @@ void setup() {
   pinMode(button2Pin, INPUT);
   pinMode(button3Pin, INPUT);
 
-  
-  digitalWrite(ledR, HIGH);  
+
+  digitalWrite(ledR, HIGH);
 
   // Configure Threads
   inputButtonThread.onRun(chackInputButtons);
@@ -157,7 +157,11 @@ void sendActivationBeacon() {
   /// Writing to pipe
   if (wasButton1Pressed && button1Timer <= 0) {
     uint32_t messege  = makeMessage(0, Control, ReqestID) ;
-    writeToRadio(messege);
+    //  writeToRadio(messege);
+    radio.openWritingPipe(addresses[0]);
+    radio.stopListening();
+    radio.write(&messege, sizeof(messege));
+    Serial.println(messege);
     wasButton1Pressed =  false;
     // delay(50);
   }
@@ -184,10 +188,10 @@ void handleHandShkae() {
     Serial.println("Connected");
     motounitAdress = GetReciverAdress(text);
     motounitClusterID = GetClusterId(text);
-       digitalWrite(ledR, LOW);  
-  }else{
+    digitalWrite(ledR, LOW);
+  } else {
     Serial.println("Not Connected");
-    }
+  }
 
 }
 
@@ -301,8 +305,8 @@ void handleMessage(uint32_t text) {
 void outputMessageData(MessageData data) {
   switch (data) {
     case Fire: {
-       // redBlinkNumber = BlinkNumber;
-         blueBlinkNumber = BlinkNumber;
+        // redBlinkNumber = BlinkNumber;
+        blueBlinkNumber = BlinkNumber;
         break;
       }
 
