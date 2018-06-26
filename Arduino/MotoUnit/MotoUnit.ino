@@ -89,7 +89,7 @@ void setup() {
   pinMode(button3Pin, INPUT);
 
   
-    digitalWrite(ledR, HIGH);  
+  digitalWrite(ledR, HIGH);  
 
   // Configure Threads
   inputButtonThread.onRun(chackInputButtons);
@@ -158,7 +158,7 @@ void sendActivationBeacon() {
   if (wasButton1Pressed && button1Timer <= 0) {
     uint32_t messege  = makeMessage(0, Control, ReqestID) ;
     writeToRadio(messege);
-    wasButton3Pressed =  false;
+    wasButton1Pressed =  false;
     // delay(50);
   }
 
