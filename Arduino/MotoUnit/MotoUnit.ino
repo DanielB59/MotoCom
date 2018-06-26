@@ -59,7 +59,8 @@ ThreadController controll = ThreadController();
 Thread inputButtonThread = Thread();
 Thread outputButtonThread = Thread();
 
-/// Testing Mode Variables
+/// Moto Unit Variables
+bool isMotoComander = true;
 bool isTestMode = false;
 int counter = 0;
 int mode = 0;
@@ -120,24 +121,22 @@ void loop() {
     uint32_t messege = makeMessage(0, All, Fire) ;
     writeToRadio(messege);
     wasButton1Pressed =  false;
-    delay(50);
+    //  delay(50);
     // Serial.print("Reques ID Sent with : ");
 
   } else if (wasButton2Pressed && button2Timer <= 0) {
     uint32_t messege = makeMessage(0, All, stopFire) ;
     writeToRadio(messege);
     wasButton2Pressed =  false;
-    delay(50);
+    // delay(50);
   }
   else if (wasButton3Pressed && button3Timer <= 0) {
-    uint32_t messege  = makeMessage(0, All, Ack) ;
+    uint32_t messege  = makeMessage(0, All, Advance) ;
     writeToRadio(messege);
     wasButton3Pressed =  false;
-    delay(50);
+    // delay(50);
   }
-  button1Timer--;
-  button2Timer--;
-  button3Timer--;
+
   /// Reading from pipe
   radio.openReadingPipe(1, addresses[0]);
   radio.startListening();
@@ -153,25 +152,11 @@ void loop() {
 void sendActivationBeacon() {
 
   /// Writing to pipe
-  if (wasButton1Pressed) {
-    if (button1Timer <= 0) {
-      radio.openWritingPipe(addresses[0]);
-      radio.stopListening();
-      uint32_t messege = 0;
-      messege = makeMessage(0, Control, ReqestID) ;
-      const char sendText[] = "Hi";
-      radio.write(&messege, sizeof(messege));
-
-      Serial.println("Reques ID Sent");
-
-      wasRequestIdSent = true;
-      delay(50);
-
-      wasButton1Pressed =  false;
-    } else {
-      button1Timer--;
-    }
-
+  if (wasButton1Pressed && button1Timer <= 0) {
+    uint32_t messege  = makeMessage(0, Control, ReqestID) ;
+    writeToRadio(messege);
+    wasButton3Pressed =  false;
+    // delay(50);
   }
 
   if (!wasRequestIdSent) {
@@ -182,70 +167,65 @@ void sendActivationBeacon() {
   radio.startListening();
   if (radio.available())
   {
-    uint32_t text = {0};
-    radio.read(&text, sizeof(text));
-    handleMessage(text);
+    handleHandShkae();
+  }
+}
+
+void handleHandShkae() {
+  uint32_t text = {0};
+  radio.read(&text, sizeof(text));
+  MessageData data = GetData( text);
+  handleMessage(text);
+  if (data == AssignID) {
     wasActivated = true;
     Serial.println("Connected");
     motounitAdress = GetReciverAdress(text);
+    motounitClusterID = GetClusterId(text);
+  }else{
+    Serial.println("Not Connected");
+    }
 
-  }
 }
 
 int startTimer  = 1000;
 // callback for inputButtonThread
 void chackInputButtons() {
-  /// Testing with no buttons or leds
-  /// will send messages all the time
-  if (isTestMode && (counter == 0)) {
-    if (mode == 0) {
-      wasButton1Pressed = true;
-      mode++;
-    } else {
-      wasButton2Pressed = true;
-      mode = 0;
-    }
-    counter = 200;
-  }
-  else if (isTestMode && (counter >= 1)) {
-    counter--;
-  }
+
   /// Normal Mode
   /// will only send messages when buttons are pressed
-  else if (!isTestMode) {
-
-    button1State = digitalRead(button1Pin);
-    if (button1State == HIGH) {
-
-      // digitalWrite(ledG, HIGH);
-      if (!wasButton1Pressed) {
-        wasButton1Pressed = true;
-        button1Timer = startTimer;
-      }
-    } else {
-      //    digitalWrite(ledG, LOW);
-    }
-    button2State = digitalRead(button2Pin);
-    if (button2State == HIGH ) {
-      // digitalWrite(ledB, HIGH);
-      if (!wasButton2Pressed) {
-        wasButton2Pressed = true;
-        button2Timer = startTimer;
-      }
-    } else {
-      // digitalWrite(ledB, LOW);
-    }
-    button3State = digitalRead(button3Pin);
-    if (button3State == HIGH ) {
-      // digitalWrite(ledB, HIGH);
-      if (!wasButton3Pressed) {
-        wasButton3Pressed = true;
-        button3Timer = startTimer;
-      }
-    } else {
-      // digitalWrite(ledB, LOW);
+  button1State = digitalRead(button1Pin);
+  if (button1State == HIGH) {
+    if (!wasButton1Pressed) {
+      wasButton1Pressed = true;
+      button1Timer = startTimer;
     }
   }
+  button2State = digitalRead(button2Pin);
+  if (button2State == HIGH ) {
+    if (!wasButton2Pressed) {
+      wasButton2Pressed = true;
+      button2Timer = startTimer;
+    }
+  }
+  button3State = digitalRead(button3Pin);
+  if (button3State == HIGH ) {
+    if (!wasButton3Pressed) {
+      wasButton3Pressed = true;
+      button3Timer = startTimer;
+    }
+  }
+
+  /// Reset Button Timers if needed
+  if (button1Timer > 0) {
+    button1Timer--;
+  }
+  if (button2Timer > 0) {
+    button2Timer--;
+  }
+  if (button3Timer > 0) {
+    button3Timer--;
+  }
+
 }
 
 // callback for hisThread
