@@ -113,6 +113,7 @@ void sendMsgToComputer(uint32_t msg) {
   Serial.write((byte*)&msg, sizeof(msg));
 //  Serial.flush();
 }
+
 /// To Fill by michael
 void sendMsgToRadio(uint32_t msg) {
   radio.openWritingPipe(addresses[0]);
