@@ -11,7 +11,9 @@ namespace MotoComManager {
 
 		public enum BroadcastType : UInt32 { all = 0, single = 1, control = 2, distress = 3 };
 		public enum SenderType : UInt32 { soldier = 0, commander = 1, hq = 2, external = 3 };
-		public enum MessageData : UInt32 { fire = 0, stopFire = 1, advance = 2, retreat = 3, ack = 4, requestID = 5, assignID = 6, isConnected = 7, verifyConnect = 8 };
+		public enum MessageData : UInt32 { fire = 0, stopFire = 1, advance = 2, retreat = 3, ack = 4, requestBind = 5, bind = 6, isConnected = 7, verifyConnect = 8 };
+
+		public string Driver { get; set; }
 
 		public const int messageSize = sizeof(UInt32);
 
@@ -28,6 +30,7 @@ namespace MotoComManager {
 		public byte[] MessageBytes { get; set; }
 
 		public Message(UInt32 value = 0) {
+			Driver = null;
 			MessageBytes = new byte[messageSize];
 			MessageValue = value;
 		}

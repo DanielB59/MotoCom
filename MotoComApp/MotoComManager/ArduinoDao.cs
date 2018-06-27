@@ -36,21 +36,23 @@ namespace MotoComManager {
 			Task.Run(() => {
 				while (true) {
 					try {
-						//if (flag) {
-						ArduinoDriver[] copy = new ArduinoDriver[viewList.Count];
-						Instance.viewList.CopyTo(copy, 0);
-						foreach (ArduinoDriver driver in copy) {
-							if (null != driver && !driver.isDisposed) {
-								if (0 < driver.stream.BytesToRead) {
-									driver.read();
+						if (flag) {
+							ArduinoDriver[] copy = new ArduinoDriver[viewList.Count];
+							Instance.viewList.CopyTo(copy, 0);
+							foreach (ArduinoDriver driver in copy) {
+								if (null != driver && !driver.isDisposed) {
+									if (0 < driver.stream.BytesToRead) {
+										driver.read();
+									}
+									Message msg = null;
+									driver.readQueue.TryDequeue(out msg);
+									if (null != msg) {
+										msg.Driver = driver.ToString();
+										MainWindow.dispatcher.InvokeAsync(() => inBoundList.Insert(0, msg));
+									}
 								}
-								Message msg = null;
-								driver.readQueue.TryDequeue(out msg);
-								if (null != msg)
-									MainWindow.dispatcher.InvokeAsync(() => inBoundList.Insert(0, msg));
 							}
 						}
-						//}
 					}
 					catch {
 					}
@@ -101,9 +103,9 @@ namespace MotoComManager {
 			selectedDriver.readQueue.TryDequeue(out msg);
 		}
 
-		//volatile bool flag = true;
+		volatile bool flag = true;
 		public void scanDevices(bool test = false) {
-			//flag = false;
+			flag = false;
 			lock (this) {
 				if (!test) MainWindow.dispatcher.InvokeAsync(viewList.Clear);
 				foreach (PortDescription port in SerialPortStream.GetPortDescriptions()) {
@@ -134,7 +136,7 @@ namespace MotoComManager {
 							driver.Dispose();
 					}
 				}
-				//flag = true;
+				flag = true;
 			}
 		}
 	}

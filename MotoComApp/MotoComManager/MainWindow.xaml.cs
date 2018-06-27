@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Reflection.Emit;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,18 +25,33 @@ namespace MotoComManager {
 	/// Interaction logic for MainWindow.xaml
 	/// </summary>
 	public partial class MainWindow : Window {
-		public class MotoUnitItem {
+		public abstract class MotoItem {
 			public UInt32 ID { get; private set; }
-			public MotoUnitItem(UInt32 id) => ID = id;
-			public static implicit operator UInt32(MotoUnitItem item) => item.ID;
+			public MotoItem(UInt32 id) => ID = id;
+			public static implicit operator UInt32(MotoItem item) => item.ID;
+		}
+
+		public class MotoUnitItem : MotoItem {
+			private UInt32 counter = 1;
+			public UInt32 Counter { get => (counter) == 0x40 ? counter = 1 : counter++; }
+			public MotoUnitItem(UInt32 id): base(id) { }
 			public override string ToString() => "MotoUnit [" + ID + "]";
+		}
+
+		public class MotoClusterItem : MotoItem {
+			public MotoUnitItem idHandler = new MotoUnitItem(0);
+			private static UInt32 counter = 1;
+			public static UInt32 Counter { get => (counter) == 0x10 ? counter = 1 : counter++; }
+			public MotoClusterItem(UInt32 id) : base(id) { }
+			public override string ToString() => "MotoCluster [" + ID + "]";
 		}
 
 		ObservableCollection<ArduinoDriver> list = ArduinoDao.Instance.viewList;
 
 		public ObservableCollection<Message> inBoundList = ArduinoDao.Instance.inBoundList;
 		public ObservableCollection<Message> outBoundList = ArduinoDao.Instance.outBoundList;
-		public ObservableCollection<MotoUnitItem> toList = new ObservableCollection<MotoUnitItem>();
+		public ObservableCollection<MotoClusterItem> clusterList = new ObservableCollection<MotoClusterItem>();
+		public Dictionary<UInt32, ObservableCollection<MotoItem>> clusterDeviceList = new Dictionary<UInt32, ObservableCollection<MotoItem>>();
 
 		//temporary solution
 		public static MainWindow instance = null;
@@ -49,11 +65,11 @@ namespace MotoComManager {
 			inboundLog.ItemsSource = inBoundList;
 			outboundLog.ItemsSource = outBoundList;
 
-			clusterDevices.ItemsSource = toList;
 			castTypeBox.ItemsSource = Enum.GetValues(typeof(Message.BroadcastType));
 			castTypeBox.SelectedIndex = 0;
-			dataBox.ItemsSource = new Message.MessageData[] { Message.MessageData.fire, Message.MessageData.advance, Message.MessageData.retreat, Message.MessageData.stopFire };
+			dataBox.ItemsSource = new Message.MessageData[] { Message.MessageData.fire, Message.MessageData.advance, Message.MessageData.retreat, Message.MessageData.stopFire, Message.MessageData.bind };
 			dataBox.SelectedIndex = 0;
+			clusterBox.ItemsSource = clusterList;
 
 			instance = this;
 			dispatcher = Dispatcher;
@@ -70,36 +86,60 @@ namespace MotoComManager {
 
 		private void sendButton_Click(object sender, RoutedEventArgs e) {
 			Task.Run(() => {
-				if (null != ArduinoDao.Instance.selectedDriver)
-					Dispatcher.InvokeAsync(() => {
-						Message msg = new Message();
-						msg[Message.Field.from] = 0x0;  //TODO: fix?
-						msg[Message.Field.to] = (null != clusterDevices.SelectedItem) ? (UInt32)(MotoUnitItem)clusterDevices.SelectedItem : 0x0;  //TODO: fix
+				Message msg = new Message();
+				Dispatcher.InvokeAsync(() => {
+					if (null != deviceList.SelectedItem && null != clusterBox.SelectedItem) {
+						msg[Message.Field.from] = 0x0;
+						msg[Message.Field.to] = (null != clusterDevices.SelectedItem && Message.BroadcastType.all != (Message.BroadcastType)castTypeBox.SelectedItem) ? (UInt32)(MotoItem)clusterDevices.SelectedItem : 0x0;
 						msg[Message.Field.broadcastType] = (UInt32)(Message.BroadcastType)castTypeBox.SelectedItem;
 						msg[Message.Field.senderType] = (UInt32)Message.SenderType.hq;
 						msg[Message.Field.messageData] = (UInt32)(Message.MessageData)dataBox.SelectedItem;
+						msg[Message.Field.clusterID] = (null != clusterBox.SelectedItem) ? (UInt32)(MotoItem)clusterBox.SelectedItem : 0x0;
 						messageSend(msg);
-					});
+					}
+				});
 			});
 		}
 
 		private void messageSend(Message msg) {
-			ArduinoDao.Instance.enqueueMessage(msg);
-			ArduinoDao.Instance.selectedDriver.write();
-			Dispatcher.InvokeAsync(() => outBoundList.Insert(0, msg));
+			if (outBoundHandle(msg)) {
+				ArduinoDao.Instance.enqueueMessage(msg);
+				ArduinoDao.Instance.selectedDriver.write();
+				Dispatcher.InvokeAsync(() => outBoundList.Insert(0, msg));
+			}
 		}
 
-		private static UInt32 counter = 0;
-		private static UInt32 Counter { get => ++counter % 0x40; }
+		public bool outBoundHandle(Message msg) {
+			switch (msg[Message.Field.messageData]) {
+				case (UInt32)Message.MessageData.bind:
+					if (requestedBind) {
+						MotoUnitItem newUnit = new MotoUnitItem(((MotoClusterItem)clusterBox.SelectedItem).idHandler.Counter);
+						msg[Message.Field.to] = newUnit.ID;
+						msg[Message.Field.broadcastType] = (UInt32)Message.BroadcastType.all;
+						msg[Message.Field.clusterID] = (MotoItem)clusterBox.SelectedItem;
+						clusterDeviceList[(MotoItem)clusterBox.SelectedItem].Add(newUnit);
+						requestedBind = false;
+					}
+					else
+						return false;
+					break;
+				default:
+					Console.WriteLine("a message was sent!");
+					break;
+			}
+
+			return true;
+		}
+
+		private bool requestedBind = false;
 		public void inboundHandle(object sender, NotifyCollectionChangedEventArgs e) {
 			Task.Run(() => {
 				switch (e.Action) {
 					case NotifyCollectionChangedAction.Add:
 						Message msg = e.NewItems[0] as Message;
 						switch (msg[Message.Field.messageData]) {
-							case (UInt32)Message.MessageData.requestID:
-								messageSend(new Message(0x0, Counter, Message.BroadcastType.single, Message.SenderType.hq, Message.MessageData.assignID, counter));
-								Dispatcher.InvokeAsync(() => toList.Add(new MotoUnitItem(counter)));
+							case (UInt32)Message.MessageData.requestBind:
+								requestedBind = true;
 								break;
 							default:
 								Console.WriteLine("a message was recieved!");
@@ -117,24 +157,28 @@ namespace MotoComManager {
 		private void deviceList_SelectionChanged(object sender, SelectionChangedEventArgs e) {
 			ArduinoDriver driver = ArduinoDao.Instance.selectedDriver = deviceList.SelectedItem as ArduinoDriver;
 			if (null != driver)
-				selectLabel.Content = driver.ToString();
+				selectHQ.Content = driver.ToString();
 			else
-				selectLabel.Content = "<selected>";
+				selectHQ.Content = "<selected>";
 		}
 
-		private void simuButton_Click(object sender, RoutedEventArgs e) {
-			Task.Run(() => {
-				if (null != ArduinoDao.Instance.selectedDriver)
-					Dispatcher.InvokeAsync(() => {
-						Message msg = new Message();
-						msg[Message.Field.from] = 0;  //TODO: fix?
-						msg[Message.Field.to] = 0;  //TODO: fix
-						msg[Message.Field.broadcastType] = (UInt32)(Message.BroadcastType)castTypeBox.SelectedItem;
-						msg[Message.Field.senderType] = (UInt32)Message.SenderType.hq;  //TODO: ok?
-						msg[Message.Field.messageData] = (UInt32)(Message.MessageData)dataBox.SelectedItem;
-						inBoundList.Add(msg);
-					});
-			});
+		private void createButton_Click(object sender, RoutedEventArgs e) {
+			MotoClusterItem newCluster = new MotoClusterItem(MotoClusterItem.Counter);
+			clusterDeviceList.Add(newCluster.ID, new ObservableCollection<MotoItem>());
+			clusterList.Add(newCluster);
+			clusterBox.SelectedIndex = clusterList.Count - 1;
+			selectUnit.Content = "<selected>";
+		}
+
+		private void clusterDevices_SelectionChanged(object sender, SelectionChangedEventArgs e) {
+			if (null != clusterDevices.SelectedItem)
+				selectUnit.Content = clusterDevices.SelectedItem.ToString();
+			else
+				selectUnit.Content = "<selected>";
+		}
+
+		private void clusterBox_SelectionChanged(object sender, SelectionChangedEventArgs e) {
+			clusterDevices.ItemsSource = clusterDeviceList[(MotoItem)clusterBox.SelectedItem];
 		}
 	}
 }

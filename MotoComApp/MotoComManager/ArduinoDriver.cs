@@ -33,10 +33,10 @@ namespace MotoComManager {
 
 			stream.ReadTimeout = ReadTimeout;
 			stream.WriteTimeout = WriteTimeout;
-			stream.Handshake = Handshake.Rts;
+			//stream.Handshake = Handshake.Rts;
 			//stream.DataReceived += ArduinoDao.readHandler;
 			//stream.
-			stream.DataReceived += (s, e) => Task.Run(()=>Console.Write("hello"));
+			//stream.DataReceived += (s, e) => Task.Run(()=>Console.Write("hello"));
 			open();
 		}
 
@@ -154,7 +154,7 @@ namespace MotoComManager {
 		public override string ToString() => "[" + stream.PortName + ", " + stream.BaudRate + "]";
 	}
 
-	static class SerialPortStreamExtentions {
+	static class SerialPortStreamExtensions {
 		public static IAsyncResult BeginRead(this SerialPortStream stream, out Message message, AsyncCallback callback, object state)
 			=> stream.BeginRead((message = new Message()).MessageBytes, 0, Message.messageSize, callback, state);
 		public static IAsyncResult BeginWrite(this SerialPortStream stream, Message message, AsyncCallback callback, object state)
