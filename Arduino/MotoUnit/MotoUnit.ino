@@ -96,7 +96,7 @@ void setup() {
   inputButtonThread.setInterval(0);
 
   outputButtonThread.onRun(blinkBlueLed);
-  outputButtonThread.setInterval(400);
+  outputButtonThread.setInterval(0);
 
   // Adds both threads to the controller
   controll.add(&inputButtonThread);
@@ -344,7 +344,9 @@ uint32_t makeMessage(uint8_t reciver, Brodcast_Type type, MessageData data) {
   messege = setBits(messege, reciver, ReciverAdress, BrodcastType);
   messege = setBits(messege, type, BrodcastType, SenderType);
   messege = setBits(messege, unitType, SenderType, Data);
-  messege = setBits(messege, data, Data, EndMsg);
+  messege = setBits(messege, data, Data, ClusterId);
+  messege = setBits(messege, motounitClusterID, ClusterId, EndMsg);
+  
   return messege;
 }
 
