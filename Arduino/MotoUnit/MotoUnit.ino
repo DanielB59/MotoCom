@@ -18,7 +18,7 @@ enum Sender_Type { Soldier = 0, Commander = 1,
 enum MessageData { Fire = 0, stopFire = 1,
                    Advance = 2, Reatrat = 3,
                    Ack = 4 , ReqestID = 5 , AssignID = 6,
-                   IsConnected = 7, VerifayConnect = 8, Distres =9
+                   IsConnected = 7, VerifayConnect = 8, Distres = 9
                  };
 enum EncodingOffset { SenderAdress = 0, ReciverAdress = 6,
                       BrodcastType = 12,  SenderType = 14,
@@ -125,15 +125,7 @@ void loop() {
     sendActivationBeacon();
     return;
   }
-  if (button1Timer > 0) {
-    button1Timer--;
-  }
-  if (button2Timer > 0) {
-    button2Timer--;
-  }
-  if (button3Timer > 0) {
-    button3Timer--;
-  }
+  decraseButtonTimers();
   /// Writing to pipe
   if (wasButton1Pressed && button1Timer <= 0) {
     uint32_t messege = 0;
@@ -181,15 +173,7 @@ void loop() {
 void sendActivationBeacon() {
 
   /// Reset Button Timers if needed
-  if (button1Timer > 0) {
-    button1Timer--;
-  }
-  if (button2Timer > 0) {
-    button2Timer--;
-  }
-  if (button3Timer > 0) {
-    button3Timer--;
-  }
+  decraseButtonTimers();
   /// Writing to pipe
   if (wasButton1Pressed && button1Timer <= 0) {
     uint32_t messege  = makeMessage(0, Control, ReqestID) ;
@@ -395,13 +379,13 @@ void outputMessageData(MessageData data) {
         }
         break;
       }
-     case Distres: {
+    case Distres: {
         if (unitType == Commander) {
           writeToDisplay("Message Recived:", "Distress");
         }
         break;
       }
-      
+
     default: {
         if (unitType == Commander) {
           writeToDisplay("Message Recived:", "Other Message");
@@ -421,7 +405,6 @@ uint32_t makeMessage(uint8_t reciver, Brodcast_Type type, MessageData data) {
   messege = setBits(messege, unitType, SenderType, Data);
   messege = setBits(messege, data, Data, ClusterId);
   messege = setBits(messege, motounitClusterID, ClusterId, EndMsg);
-
   return messege;
 }
 
@@ -528,6 +511,18 @@ void writeToDisplay(const char *row1, const char *row2) {
   LCD.write(254);
   LCD.write(192);
   LCD.write(row2);
+}
+
+void decraseButtonTimers() {
+  if (button1Timer > 0) {
+    button1Timer--;
+  }
+  if (button2Timer > 0) {
+    button2Timer--;
+  }
+  if (button3Timer > 0) {
+    button3Timer--;
+  }
 }
 
 
