@@ -5,7 +5,7 @@
 		xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 		xmlns:local="clr-namespace:MotoComManager"
 		mc:Ignorable="d"
-		ResizeMode="NoResize"
+		ResizeMode="CanMinimize"
 		SizeToContent="WidthAndHeight"
 		Title="MotoCom Manager" Height="550" Width="900" Closing="Window_Closing">
 	<Grid>
