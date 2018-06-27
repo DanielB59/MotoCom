@@ -11,7 +11,7 @@ enum Brodcast_Type { All = 0, Single = 1,
 enum MessageData { Fire = 0, stopFire = 1,
                    Advance = 2, Reatrat = 3,
                    Ack = 4 , ReqestID = 5 , AssignID = 6,
-                   IsConnected = 7, VerifayConnect = 8
+                   IsConnected = 7, VerifayConnect = 8 , Distres =9
                  };
 enum EncodingOffset { SenderAdress = 0, ReciverAdress = 6,
                       BrodcastType = 12,  SenderType = 14,
