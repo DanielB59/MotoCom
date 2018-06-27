@@ -36,10 +36,10 @@ void setup() {
   radio.begin();
   // Configure Threads
   radioListenerThread.onRun(chackRadioForInput);
-  radioListenerThread.setInterval(0);
+ // radioListenerThread.setInterval(50);
 
   computerListenerThread.onRun(chackComputerForInput);
-  computerListenerThread.setInterval(0);
+ // computerListenerThread.setInterval(50);
 
   // Adds both threads to the controller
   controll.add(&radioListenerThread);
@@ -71,7 +71,7 @@ void chackComputerForInput() {
   if (Serial.available()) {
 
     digitalWrite(2, HIGH);
-    uint32_t msg = getMsgFromSerial();
+    uint32_t msg = getMsgFromSerial();;
     sendMsgToRadio(msg);
     delay(200);
     digitalWrite(2, LOW);
@@ -105,7 +105,7 @@ uint32_t getMsgFromSerial() {
 /// To Fill Daniel
 void sendMsgToComputer(uint32_t msg) {
   Serial.write((byte*)&msg, sizeof(msg));
-  //Serial.flush();
+//  Serial.flush();
 }
 /// To Fill by michael
 void sendMsgToRadio(uint32_t msg) {
