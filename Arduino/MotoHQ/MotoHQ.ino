@@ -8,15 +8,21 @@
 enum Brodcast_Type { All = 0, Single = 1,
                      Control = 2, Distress = 3
                    };
+enum Sender_Type { Soldier = 0, Commander = 1,
+                   HQ = 2, Extrnal = 3
+                 };
 enum MessageData { Fire = 0, stopFire = 1,
                    Advance = 2, Reatrat = 3,
                    Ack = 4 , ReqestID = 5 , AssignID = 6,
-                   IsConnected = 7, VerifayConnect = 8 , Distres =9
+                   IsConnected = 7, VerifayConnect = 8, Distres =9
                  };
 enum EncodingOffset { SenderAdress = 0, ReciverAdress = 6,
                       BrodcastType = 12,  SenderType = 14,
-                      Data = 16
+                      Data = 16, ClusterId = 22,  EndMsg = 26
                     };
+enum EncodingSize { AdressSize = 6 , BrodcastTypeSize = 2,
+                    SenderTypeSize = 2, DataSize = 6, ClusterIdSize = 4
+                  };
 RF24 radio(9, 10);
 const byte addresses[][6] = {"00001", "00002"};
 uint8_t unitAdress = 0;
@@ -119,58 +125,6 @@ void sendMsgToRadio(uint32_t msg) {
 // handeller to run all thredes
 void loop() {
   controll.run();
-}
-
-/// Helper functions from moto unit code
-
-uint32_t makeMessage(uint8_t reciver, Brodcast_Type type, MessageData data) {
-  uint32_t messege = 0;
-  messege = setBits(messege, 0, SenderAdress);
-  messege = setBits(messege, reciver, ReciverAdress);
-  messege = setBits(messege, type, BrodcastType);
-  messege = setBits(messege, 0, SenderType);
-  messege = setBits(messege, data, Data);
-  return messege;
-}
-
-// Used in makeMessage(uint8_t reciver, Brodcast_Type type, MessageData data)
-// To set bits indepentely
-uint32_t setBits(uint32_t messege, uint8_t adress, int startPoint) {
-  int count = 0;
-  for (int i = startPoint; i < startPoint + 8; i++) {
-    bitWrite(messege, i, bitRead(adress, count++));
-  }
-  return messege;
-
-}
-
-uint8_t GetAdress(uint32_t messege, int offset) {
-  uint8_t add = 0;
-  int count = 0;
-  for (int i = offset; i < offset + 8; i++) {
-    bitWrite(add, count++, bitRead(messege, i));
-  }
-  return add;
-}
-
-MessageData GetData(uint32_t messege) {
-  int offset = Data;
-  uint8_t add = 0;
-  int count = 0;
-  for (int i = offset; i < offset + 4; i++) {
-    bitWrite(add, count++, bitRead(messege, i));
-  }
-  return add;
-}
-
-Brodcast_Type GetBrodcastType(uint32_t messege) {
-  int offset = BrodcastType;
-  uint8_t add = 0;
-  int count = 0;
-  for (int i = offset; i < offset + 4; i++) {
-    bitWrite(add, count++, bitRead(messege, i));
-  }
-  return add;
 }
 
 void printMessageBits(uint32_t messege) {
