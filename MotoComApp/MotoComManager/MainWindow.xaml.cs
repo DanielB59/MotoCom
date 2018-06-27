@@ -42,7 +42,21 @@ namespace MotoComManager {
 			public MotoUnitItem idHandler = new MotoUnitItem(0);
 			private static UInt32 counter = 1;
 			public static UInt32 Counter { get => (counter) == 0x10 ? counter = 1 : counter++; }
-			public MotoClusterItem(UInt32 id) : base(id) { }
+			public SolidColorBrush Brush { get; private set; }
+			public MotoClusterItem(UInt32 id) : base(id) {
+				Random r = new Random();
+				switch (r.Next(3)) {
+					case 0:
+						Brush = new SolidColorBrush(Color.FromArgb(0xFF, (byte)r.Next(0xFF), (byte)r.Next(0xFF), 0x00));
+						break;
+					case 1:
+						Brush = new SolidColorBrush(Color.FromArgb(0xFF, (byte)r.Next(0xFF), 0x00, (byte)r.Next(0xFF)));
+						break;
+					case 2:
+						Brush = new SolidColorBrush(Color.FromArgb(0xFF, 0x00, (byte)r.Next(0xFF), (byte)r.Next(0xFF)));
+						break;
+				}
+			}
 			public override string ToString() => "MotoCluster [" + ID + "]";
 		}
 
@@ -95,6 +109,12 @@ namespace MotoComManager {
 						msg[Message.Field.senderType] = (UInt32)Message.SenderType.hq;
 						msg[Message.Field.messageData] = (UInt32)(Message.MessageData)dataBox.SelectedItem;
 						msg[Message.Field.clusterID] = (null != clusterBox.SelectedItem) ? (UInt32)(MotoItem)clusterBox.SelectedItem : 0x0;
+						if (0 < clusterList.Count) {
+							msg.BrushBack = (from cluster in clusterList
+											 where cluster.ID == msg[Message.Field.clusterID]
+											 select cluster.Brush).FirstOrDefault();
+							msg.BrushFore = new SolidColorBrush(Color.FromArgb(0xFF, 0xFF, 0xFF, 0xFF));
+						}
 						messageSend(msg);
 					}
 				});

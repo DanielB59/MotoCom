@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-
+using System.Windows.Media;
 using RJCP.IO;
 using RJCP.IO.Ports;
 
@@ -48,7 +48,15 @@ namespace MotoComManager {
 									driver.readQueue.TryDequeue(out msg);
 									if (null != msg) {
 										msg.Driver = driver.ToString();
-										MainWindow.dispatcher.InvokeAsync(() => inBoundList.Insert(0, msg));
+										MainWindow.dispatcher.InvokeAsync(() => {
+											if (0 < MainWindow.instance.clusterList.Count) {
+												msg.BrushBack = (from cluster in MainWindow.instance.clusterList
+																 where cluster.ID == msg[Message.Field.clusterID]
+																 select cluster.Brush).FirstOrDefault();
+												msg.BrushFore = new SolidColorBrush(Color.FromArgb(0xFF, 0xFF, 0xFF, 0xFF));
+											}
+											inBoundList.Insert(0, msg);
+										});
 									}
 								}
 							}
