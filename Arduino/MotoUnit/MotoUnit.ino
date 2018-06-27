@@ -1,5 +1,7 @@
 #include <Thread.h>
 #include <ThreadController.h>
+#include <SoftwareSerial.h>
+
 
 #include <SPI.h>
 #include <nRF24L01.h>
@@ -28,6 +30,7 @@ enum EncodingSize { AdressSize = 6 , BrodcastTypeSize = 2,
 
 /// RF Radio public variables
 RF24 radio(9, 10);
+SoftwareSerial LCD(0, 8);
 const byte addresses[][6] = {"00001", "00002"};
 uint8_t motoUnitAdress = 0;
 
@@ -73,6 +76,7 @@ Sender_Type unitType = HQ;
 
 void setup() {
   Serial.begin(9600);
+  initializeLCD();
   radio.begin();
 
   Serial.print("is Chip Connected = " );
@@ -90,6 +94,7 @@ void setup() {
 
 
   digitalWrite(ledR, HIGH);
+  writeToDisplay("Waiting For ID","Press button 1");
 
   // Configure Threads
   inputButtonThread.onRun(chackInputButtons);
@@ -205,6 +210,8 @@ void handleHandShkae() {
     motounitAdress = GetReciverAdress(text);
     motounitClusterID = GetClusterId(text);
     digitalWrite(ledR, LOW);
+    char nameit[8];
+    writeToDisplay("Connected with ID:",itoa(motounitAdress,nameit,10));
   } else {
     Serial.println("Not Connected");
   }
@@ -427,6 +434,24 @@ void printMessageBits(uint32_t messege) {
     }
   }
   Serial.println(" ");
-
-
 }
+
+void clearLCD() {
+  LCD.write(0xFE);
+  LCD.write(0x01);
+}
+
+void initializeLCD() {
+  LCD.begin(9600);
+  clearLCD();
+}
+
+void writeToDisplay(const char *row1,const char *row2){
+  clearLCD();
+  LCD.write(row1);
+  LCD.write(254);
+  LCD.write(192);
+  LCD.write(row2);
+  }
+
+
