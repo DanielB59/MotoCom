@@ -63,8 +63,8 @@
 						<ListBox.ItemTemplate>
 							<DataTemplate>
 								<StackPanel Orientation="Horizontal">
-									<TextBlock Margin="2" Text="{Binding Path = Driver}"/>
-									<TextBlock Margin="2" Text="{Binding}"/>
+									<!--<TextBlock Visibility="Hidden" Margin="2" Text="{Binding Path = Driver}"/>-->
+									<TextBlock Background="{Binding Path = BrushBack}" Foreground="{Binding Path = BrushFore}" Margin="2" Text="{Binding}"/>
 								</StackPanel>
 							</DataTemplate>
 						</ListBox.ItemTemplate>
@@ -74,8 +74,8 @@
 						<ListBox.ItemTemplate>
 							<DataTemplate>
 								<StackPanel Orientation="Horizontal">
-									<TextBlock Margin="2" Text="{Binding Mode=OneTime, ElementName = selectHQ, Path = Content}"/>
-									<TextBlock Margin="2" Text="{Binding}"/>
+									<!--<TextBlock Margin="2" Text="{Binding Mode=OneTime, ElementName = selectHQ, Path = Content}"/>-->
+									<TextBlock Background="{Binding Path = BrushBack}" Foreground="{Binding Path = BrushFore}" Margin="2" Text="{Binding}"/>
 								</StackPanel>
 							</DataTemplate>
 						</ListBox.ItemTemplate>

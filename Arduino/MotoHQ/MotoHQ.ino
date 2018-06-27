@@ -42,10 +42,10 @@ void setup() {
   radio.begin();
   // Configure Threads
   radioListenerThread.onRun(chackRadioForInput);
- // radioListenerThread.setInterval(50);
+  radioListenerThread.setInterval(50);
 
   computerListenerThread.onRun(chackComputerForInput);
- // computerListenerThread.setInterval(50);
+  computerListenerThread.setInterval(50);
 
   // Adds both threads to the controller
   controll.add(&radioListenerThread);

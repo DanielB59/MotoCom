@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Collections;
+using System.Windows.Media;
 
 namespace MotoComManager {
 	public class Message {
@@ -11,9 +12,46 @@ namespace MotoComManager {
 
 		public enum BroadcastType : UInt32 { all = 0, single = 1, control = 2, distress = 3 };
 		public enum SenderType : UInt32 { soldier = 0, commander = 1, hq = 2, external = 3 };
-		public enum MessageData : UInt32 { fire = 0, stopFire = 1, advance = 2, retreat = 3, ack = 4, requestBind = 5, bind = 6, isConnected = 7, verifyConnect = 8 };
+		public enum MessageData : UInt32 { fire = 0, stopFire = 1, advance = 2, retreat = 3, ack = 4, requestBind = 5, bind = 6, isConnected = 7, verifyConnect = 8, distress = 9 };
 
 		public string Driver { get; set; }
+		SolidColorBrush brushBack = null;
+		public SolidColorBrush BrushBack {
+			get => (null == brushBack) ? brushBack = new SolidColorBrush(Color.FromArgb(0xFF, 0xFF, 0xFF, 0xFF)) : brushBack;
+			set {
+				switch (this[Field.messageData]) {
+					case (UInt32)MessageData.ack:
+					case (UInt32)MessageData.bind:
+					case (UInt32)MessageData.isConnected:
+					case (UInt32)MessageData.requestBind:
+					case (UInt32)MessageData.verifyConnect:
+						brushBack = new SolidColorBrush(Color.FromArgb(0xFF, 0xFF, 0xFF, 0xFF));
+						break;
+					default:
+						brushBack = value;
+						break;
+				}
+			}
+		}
+
+		SolidColorBrush brushFore = null;
+		public SolidColorBrush BrushFore {
+			get => (null == brushFore) ? brushFore = new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0x00, 0x00)) : brushFore;
+			set {
+				switch (this[Field.messageData]) {
+					case (UInt32)MessageData.ack:
+					case (UInt32)MessageData.bind:
+					case (UInt32)MessageData.isConnected:
+					case (UInt32)MessageData.requestBind:
+					case (UInt32)MessageData.verifyConnect:
+						brushFore = new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0x00, 0x00));
+						break;
+					default:
+						brushFore = value;
+						break;
+				}
+			}
+		}
 
 		public const int messageSize = sizeof(UInt32);
 
@@ -74,11 +112,11 @@ namespace MotoComManager {
 			StringBuilder builder = new StringBuilder();
 			builder.Append("[from: " + this[Field.from]);
 			builder.Append(", to: " + this[Field.to]);
-			builder.Append(", broadcastType: " + this[Field.broadcastType]);
-			builder.Append(", senderType: " + this[Field.senderType]);
-			builder.Append(", Data: " + this[Field.messageData]);
-			builder.Append(", clusterID: " + this[Field.clusterID]);
-			builder.Append(" | value: " + MessageValue + "]");
+			builder.Append(", broadcastType: " + (BroadcastType)this[Field.broadcastType]);
+			builder.Append(", senderType: " + (SenderType)this[Field.senderType]);
+			builder.Append(", Data: " + (MessageData)this[Field.messageData]);
+			builder.Append(", clusterID: " + this[Field.clusterID] + "]");
+			//builder.Append(" | value: " + MessageValue + "]");
 			return builder.ToString();
 		}
 	}
