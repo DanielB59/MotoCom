@@ -1,5 +1,7 @@
 #include <Thread.h>
 #include <ThreadController.h>
+#include <SoftwareSerial.h>
+
 
 #include <SPI.h>
 #include <nRF24L01.h>
@@ -16,7 +18,7 @@ enum Sender_Type { Soldier = 0, Commander = 1,
 enum MessageData { Fire = 0, stopFire = 1,
                    Advance = 2, Reatrat = 3,
                    Ack = 4 , ReqestID = 5 , AssignID = 6,
-                   IsConnected = 7, VerifayConnect = 8
+                   IsConnected = 7, VerifayConnect = 8, Distres =9
                  };
 enum EncodingOffset { SenderAdress = 0, ReciverAdress = 6,
                       BrodcastType = 12,  SenderType = 14,
@@ -28,6 +30,7 @@ enum EncodingSize { AdressSize = 6 , BrodcastTypeSize = 2,
 
 /// RF Radio public variables
 RF24 radio(9, 10);
+SoftwareSerial LCD(0, 8);
 const byte addresses[][6] = {"00001", "00002"};
 uint8_t motoUnitAdress = 0;
 
@@ -69,10 +72,13 @@ bool wasActivated = false;
 bool wasRequestIdSent = false;
 uint8_t motounitAdress = 0;
 uint8_t motounitClusterID = 0;
-Sender_Type unitType = HQ;
+Sender_Type unitType = Commander;
 
 void setup() {
+
+
   Serial.begin(9600);
+
   radio.begin();
 
   Serial.print("is Chip Connected = " );
@@ -91,6 +97,7 @@ void setup() {
 
   digitalWrite(ledR, HIGH);
 
+
   // Configure Threads
   inputButtonThread.onRun(chackInputButtons);
   inputButtonThread.setInterval(0);
@@ -101,14 +108,14 @@ void setup() {
   // Adds both threads to the controller
   controll.add(&inputButtonThread);
   controll.add(&outputButtonThread); // & to pass the pointer to it
+
+  // Setup for moto Commander
+  if (unitType == Commander) {
+    initializeLCD();
+    writeToDisplay("Waiting For ID", "Press button 1");
+  }
 }
 
-void writeToRadio(uint32_t messege) {
-  radio.openWritingPipe(addresses[0]);
-  radio.stopListening();
-  radio.write(&messege, sizeof(messege));
-  Serial.println(messege);
-}
 
 void loop() {
 
@@ -129,23 +136,34 @@ void loop() {
   }
   /// Writing to pipe
   if (wasButton1Pressed && button1Timer <= 0) {
-    uint32_t messege = makeMessage(0, All, Fire) ;
+    uint32_t messege = 0;
+    if (unitType == Commander) {
+      messege = makeMessage(0, All, Fire) ;
+    } else {
+      messege = makeMessage(0, All, Distres) ;
+    }
     writeToRadio(messege);
     wasButton1Pressed =  false;
-    //  delay(50);
-    // Serial.print("Reques ID Sent with : ");
-
-  } else if (wasButton2Pressed && button2Timer <= 0) {
-    uint32_t messege = makeMessage(0, All, stopFire) ;
+  }
+  else if (wasButton2Pressed && button2Timer <= 0) {
+    uint32_t messege = 0;
+    if (unitType == Commander) {
+      messege = makeMessage(0, All, stopFire) ;
+    } else {
+      messege = makeMessage(0, All, Distres) ;
+    }
     writeToRadio(messege);
     wasButton2Pressed =  false;
-    // delay(50);
   }
   else if (wasButton3Pressed && button3Timer <= 0) {
-    uint32_t messege  = makeMessage(0, All, Advance) ;
+    uint32_t messege = 0;
+    if (unitType == Commander) {
+      messege = makeMessage(0, All, Advance) ;
+    } else {
+      messege = makeMessage(0, All, Distres) ;
+    }
     writeToRadio(messege);
     wasButton3Pressed =  false;
-    // delay(50);
   }
 
   /// Reading from pipe
@@ -205,6 +223,11 @@ void handleHandShkae() {
     motounitAdress = GetReciverAdress(text);
     motounitClusterID = GetClusterId(text);
     digitalWrite(ledR, LOW);
+    if (unitType == Commander) {
+      char unitAdressString[8];
+      writeToDisplay("Connected with ID:", itoa(motounitAdress, unitAdressString, 10));
+    }
+
   } else {
     Serial.println("Not Connected");
   }
@@ -282,9 +305,9 @@ void handleMessage(uint32_t text) {
   Serial.print("Reciver Adress = " );
   Serial.println(recAdress);
 
-  Brodcast_Type type = GetBrodcastType( text);
+  Brodcast_Type brodcastType = GetBrodcastType( text);
   Serial.print("Bordcast Type = " );
-  Serial.println(type);
+  Serial.println(brodcastType);
 
   Sender_Type senderType = GetSenderType( text);
   Serial.print("Sender Type = " );
@@ -299,13 +322,21 @@ void handleMessage(uint32_t text) {
   Serial.println(clusterId);
 
   if (clusterId == motounitClusterID) {
-    if (type == All || type == Distress) {
+    if (unitType == Commander) {
       outputMessageData(data);
     }
-    else if (type == Single && motoUnitAdress == recAdress) {
+    else if (senderType == Commander) {
       outputMessageData(data);
+    }
+    else if (senderType == HQ) {
+      if (brodcastType == All || brodcastType == Distress) {
+        outputMessageData(data);
+      }
+      else if (brodcastType == Single && motoUnitAdress == recAdress) {
+        outputMessageData(data);
+      }
+    }
 
-    }
   }
 
 
@@ -316,21 +347,58 @@ void handleMessage(uint32_t text) {
 void outputMessageData(MessageData data) {
   switch (data) {
     case Fire: {
-        // redBlinkNumber = BlinkNumber;
+        if (unitType == Commander) {
+          writeToDisplay("Message Recived:", "Fire");
+        }
         blueBlinkNumber = BlinkNumber;
         break;
       }
 
     case stopFire: {
+        if (unitType == Commander) {
+          writeToDisplay("Message Recived:", "Stop Fire");
+        }
+        greenBlinkNumber = BlinkNumber;
+        break;
+      }
+    case Advance: {
+        if (unitType == Commander) {
+          writeToDisplay("Message Recived:", "Advance");
+        }
+        greenBlinkNumber = BlinkNumber;
         blueBlinkNumber = BlinkNumber;
         break;
       }
-    case Ack: {
+    case Reatrat: {
+        if (unitType == Commander) {
+          writeToDisplay("Message Recived:", "Reatrat");
+        }
         greenBlinkNumber = BlinkNumber;
+        redBlinkNumber = BlinkNumber;
+        break;
+      }
+    case Ack: {
+        if (unitType == Commander) {
+          writeToDisplay("Message Recived:", "Ack");
+        }
+        break;
+      }
+    case ReqestID: {
+        if (unitType == Commander) {
+          writeToDisplay("Message Recived:", "Request ID");
+        }
+        break;
+      }
+    case AssignID: {
+        if (unitType == Commander) {
+          writeToDisplay("Message Recived:", "Assign ID");
+        }
         break;
       }
     default: {
-        greenBlinkNumber = BlinkNumber;
+        if (unitType == Commander) {
+          writeToDisplay("Message Recived:", "Other Message");
+        }
         break;
       }
 
@@ -346,9 +414,17 @@ uint32_t makeMessage(uint8_t reciver, Brodcast_Type type, MessageData data) {
   messege = setBits(messege, unitType, SenderType, Data);
   messege = setBits(messege, data, Data, ClusterId);
   messege = setBits(messege, motounitClusterID, ClusterId, EndMsg);
-  
+
   return messege;
 }
+
+void writeToRadio(uint32_t messege) {
+  radio.openWritingPipe(addresses[0]);
+  radio.stopListening();
+  radio.write(&messege, sizeof(messege));
+  Serial.println(messege);
+}
+
 
 
 // To set bits indepentely
@@ -427,6 +503,24 @@ void printMessageBits(uint32_t messege) {
     }
   }
   Serial.println(" ");
-
-
 }
+
+void clearLCD() {
+  LCD.write(0xFE);
+  LCD.write(0x01);
+}
+
+void initializeLCD() {
+  LCD.begin(9600);
+  clearLCD();
+}
+
+void writeToDisplay(const char *row1, const char *row2) {
+  clearLCD();
+  LCD.write(row1);
+  LCD.write(254);
+  LCD.write(192);
+  LCD.write(row2);
+}
+
+
