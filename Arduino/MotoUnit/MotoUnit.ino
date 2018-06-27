@@ -18,7 +18,7 @@ enum Sender_Type { Soldier = 0, Commander = 1,
 enum MessageData { Fire = 0, stopFire = 1,
                    Advance = 2, Reatrat = 3,
                    Ack = 4 , ReqestID = 5 , AssignID = 6,
-                   IsConnected = 7, VerifayConnect = 8
+                   IsConnected = 7, VerifayConnect = 8, Distres =9
                  };
 enum EncodingOffset { SenderAdress = 0, ReciverAdress = 6,
                       BrodcastType = 12,  SenderType = 14,
@@ -140,7 +140,7 @@ void loop() {
     if (unitType == Commander) {
       messege = makeMessage(0, All, Fire) ;
     } else {
-      messege = makeMessage(0, All, Fire) ;
+      messege = makeMessage(0, All, Distres) ;
     }
     writeToRadio(messege);
     wasButton1Pressed =  false;
@@ -150,7 +150,7 @@ void loop() {
     if (unitType == Commander) {
       messege = makeMessage(0, All, stopFire) ;
     } else {
-      messege = makeMessage(0, All, stopFire) ;
+      messege = makeMessage(0, All, Distres) ;
     }
     writeToRadio(messege);
     wasButton2Pressed =  false;
@@ -160,7 +160,7 @@ void loop() {
     if (unitType == Commander) {
       messege = makeMessage(0, All, Advance) ;
     } else {
-      messege = makeMessage(0, All, Advance) ;
+      messege = makeMessage(0, All, Distres) ;
     }
     writeToRadio(messege);
     wasButton3Pressed =  false;
