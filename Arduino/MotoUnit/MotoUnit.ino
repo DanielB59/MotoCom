@@ -395,6 +395,13 @@ void outputMessageData(MessageData data) {
         }
         break;
       }
+     case Distres: {
+        if (unitType == Commander) {
+          writeToDisplay("Message Recived:", "Distress");
+        }
+        break;
+      }
+      
     default: {
         if (unitType == Commander) {
           writeToDisplay("Message Recived:", "Other Message");
