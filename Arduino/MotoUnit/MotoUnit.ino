@@ -32,7 +32,7 @@ enum EncodingSize { AdressSize = 6 , BrodcastTypeSize = 2,
 RF24 radio(9, 10);
 SoftwareSerial LCD(0, 8);
 const byte addresses[][6] = {"00001", "00002"};
-uint8_t motoUnitAdress = 0;
+
 
 /// Leds public variables
 int ledG = 3;
@@ -203,8 +203,11 @@ void handleHandShkae() {
   handleMessage(text);
   if (data == AssignID) {
     wasActivated = true;
+     
     Serial.println("Connected");
     motounitAdress = GetReciverAdress(text);
+    Serial.print("motounitAdress = ");
+    Serial.println(motounitAdress);
     motounitClusterID = GetClusterId(text);
     digitalWrite(ledR, LOW);
     if (unitType == Commander) {
@@ -306,18 +309,34 @@ void handleMessage(uint32_t text) {
   Serial.println(clusterId);
 
   if (clusterId == motounitClusterID) {
+      Serial.println("Same Cluster ID" );
     if (unitType == Commander) {
+      Serial.println("Recived becouse i am commander" );
       outputMessageData(data);
+      return;
     }
-    else if (senderType == Commander) {
+    if (senderType == Commander) {
+      Serial.println("Recived and i got if from commander" );
       outputMessageData(data);
+      return;
     }
-    else if (senderType == HQ) {
+     if (senderType == HQ) {
+      Serial.println("Recived and i got if from HQ" );
       if (brodcastType == All || brodcastType == Distress) {
+        Serial.println("brodcastType == All || brodcastType == Distress" );
         outputMessageData(data);
+        return;
       }
-      else if (brodcastType == Single && motoUnitAdress == recAdress) {
+       Serial.print("brodcastType = " );
+       Serial.println(brodcastType);
+       Serial.print("motoUnit Adress = ");
+       Serial.println( motounitAdress);
+       Serial.print("reciver Adress = " );
+       Serial.println( recAdress);
+      if (brodcastType == Single && motounitAdress == recAdress) {
+        Serial.println("brodcastType == Single && motoUnitAdress == recAdress" );
         outputMessageData(data);
+        return;
       }
     }
 
