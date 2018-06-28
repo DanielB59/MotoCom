@@ -144,7 +144,8 @@ namespace MotoComManager {
 						return false;
 					break;
 				default:
-					Console.WriteLine("a message was sent!");
+					if (!msg[Message.Field.broadcastType].Equals((UInt32)Message.BroadcastType.all) && (null == clusterDevices || null == clusterDevices.SelectedItem))
+						return false;
 					break;
 			}
 

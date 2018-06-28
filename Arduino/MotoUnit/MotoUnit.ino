@@ -72,7 +72,7 @@ bool wasActivated = false;
 bool wasRequestIdSent = false;
 uint8_t motounitAdress = 0;
 uint8_t motounitClusterID = 0;
-Sender_Type unitType = Commander;
+Sender_Type unitType = Soldier;
 
 void setup() {
 
