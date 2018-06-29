@@ -42,6 +42,7 @@ bool isGreenActive = false;
 int redBlinkNumber = 0;
 int blueBlinkNumber = 0;
 int greenBlinkNumber = 0;
+int purpleBlinkNumber = 0;
 
 /// buttons public variables
 const int button1Pin = 7;
@@ -263,19 +264,28 @@ void blinkBlueLed() {
     delay(200);
     redBlinkNumber--;
   }
-  if (blueBlinkNumber >= 1) {
+  else if (blueBlinkNumber >= 1) {
     digitalWrite(ledB, HIGH);   // turn the LED on (HIGH is the voltage level)
     delay(200);                 // wait for a second
     digitalWrite(ledB, LOW);    // turn the LED off by making the voltage LOW
     delay(200);
     blueBlinkNumber--;
   }
-  if (greenBlinkNumber >= 1) {
+  else if (greenBlinkNumber >= 1) {
     digitalWrite(ledG, HIGH);   // turn the LED on (HIGH is the voltage level)
     delay(200);                 // wait for a second
     digitalWrite(ledG, LOW);    // turn the LED off by making the voltage LOW
     delay(200);
     greenBlinkNumber--;
+  }
+   else if (purpleBlinkNumber >= 1) {
+    digitalWrite(ledR, HIGH);
+    digitalWrite(ledB, HIGH);   // turn the LED on (HIGH is the voltage level)
+    delay(200);                 // wait for a second
+    digitalWrite(ledB, LOW);    // turn the LED off by making the voltage LOW
+    digitalWrite(ledR, LOW); 
+    delay(200);
+    purpleBlinkNumber--;
   }
 
 
@@ -368,16 +378,14 @@ void outputMessageData(MessageData data) {
         if (unitType == Commander) {
           writeToDisplay("Message Recived:", "Advance");
         }
-        greenBlinkNumber = BlinkNumber;
-        blueBlinkNumber = BlinkNumber;
+        purpleBlinkNumber = BlinkNumber;
         break;
       }
     case Reatrat: {
         if (unitType == Commander) {
           writeToDisplay("Message Recived:", "Reatrat");
         }
-        greenBlinkNumber = BlinkNumber;
-        redBlinkNumber = BlinkNumber;
+        purpleBlinkNumber = BlinkNumber;
         break;
       }
     case Ack: {
@@ -401,6 +409,7 @@ void outputMessageData(MessageData data) {
     case Distres: {
         if (unitType == Commander) {
           writeToDisplay("Message Recived:", "Distress");
+          redBlinkNumber = BlinkNumber;
         }
         break;
       }
