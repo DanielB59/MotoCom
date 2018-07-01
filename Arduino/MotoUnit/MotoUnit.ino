@@ -280,10 +280,10 @@ void blinkBlueLed() {
   }
    else if (purpleBlinkNumber >= 1) {
     digitalWrite(ledR, HIGH);
-    digitalWrite(ledB, HIGH);   // turn the LED on (HIGH is the voltage level)
+    digitalWrite(ledG, HIGH);   // turn the LED on (HIGH is the voltage level)
     delay(200);                 // wait for a second
-    digitalWrite(ledB, LOW);    // turn the LED off by making the voltage LOW
-    digitalWrite(ledR, LOW); 
+    digitalWrite(ledR, LOW);    // turn the LED off by making the voltage LOW
+    digitalWrite(ledG, LOW); 
     delay(200);
     purpleBlinkNumber--;
   }
@@ -378,7 +378,7 @@ void outputMessageData(MessageData data) {
         if (unitType == Commander) {
           writeToDisplay("Message Recived:", "Advance");
         }
-        purpleBlinkNumber = BlinkNumber;
+        redBlinkNumber = BlinkNumber;
         break;
       }
     case Reatrat: {
