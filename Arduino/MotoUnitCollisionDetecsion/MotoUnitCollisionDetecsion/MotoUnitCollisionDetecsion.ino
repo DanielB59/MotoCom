@@ -111,7 +111,7 @@ void setup() {
   pinMode(button2Pin, INPUT);
   pinMode(button3Pin, INPUT);
   
-  // digitalWrite(ledR, HIGH);
+  digitalWrite(ledR, HIGH);
 
   rf24Sender.onRun(SendRfWhenPossible);
   rf24Sender.setInterval(0);
