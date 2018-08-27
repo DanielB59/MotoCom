@@ -217,7 +217,7 @@ void writeToRadio(uint32_t messege) {
   }
   else {
     Serial.println("Exited via Max Timer : Sending failed");
-    //delay(randBackoff);
+    delay(randBackoff);
     outMessageAvilable = true;
     return;
   }
