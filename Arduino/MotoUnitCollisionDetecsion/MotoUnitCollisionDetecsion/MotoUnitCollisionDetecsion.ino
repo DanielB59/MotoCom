@@ -85,11 +85,11 @@ bool isTestMode = false;
 int counter = 0;
 int mode = 0;
 
-bool wasActivated = true;
+bool wasActivated = false;
 bool wasRequestIdSent = false;
 uint8_t motounitAdress = 0;
 uint8_t motounitClusterID = 0;
-Sender_Type unitType = Commander;
+Sender_Type unitType = Soldier;
 
 void setup() {
 
@@ -217,7 +217,7 @@ void writeToRadio(uint32_t messege) {
   }
   else {
     Serial.println("Exited via Max Timer : Sending failed");
-    delay(randBackoff);
+    //delay(randBackoff);
     outMessageAvilable = true;
     return;
   }
