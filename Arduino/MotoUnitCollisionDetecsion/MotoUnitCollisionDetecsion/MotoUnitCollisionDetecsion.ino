@@ -119,6 +119,7 @@ Thread rf24Sender = Thread();
 
 /// Moto Unit Variables
 
+<<<<<<< HEAD
 /// Activation status of the device
 /// if false device will only be able to
 /// send activation beacon messeges until
@@ -128,6 +129,9 @@ bool wasActivated = true;
 /// Activation beacon messeges status
 /// if true device has sent Activation beacon messege
 /// and is waiting for an answer
+=======
+bool wasActivated = false;
+>>>>>>> 853a6055ce72281d55b62cec33820f493f874f34
 bool wasRequestIdSent = false;
 
 /// Specific MotoUnit Address will be changed as soon as device is initiated
@@ -135,10 +139,13 @@ uint8_t motounitAdress = 0;
 
 /// Specific MotoUnit Cluster ID will be changed as soon as device is initiated
 uint8_t motounitClusterID = 0;
+<<<<<<< HEAD
 
 /// Specific MotoUnit Type determined by the hardware of the device
 /// can be set to : Commander / Soldier
 Sender_Type unitType = Commander;
+=======
+>>>>>>> 853a6055ce72281d55b62cec33820f493f874f34
 
 /// Setup is called once every time the device is turend on
 void setup() {
@@ -170,8 +177,13 @@ void setup() {
   pinMode(button1Pin, INPUT);
   pinMode(button2Pin, INPUT);
   pinMode(button3Pin, INPUT);
+<<<<<<< HEAD
 
   // digitalWrite(ledR, HIGH);
+=======
+  
+  digitalWrite(ledR, HIGH);
+>>>>>>> 853a6055ce72281d55b62cec33820f493f874f34
 
   // Configure application threading functions and timers
   rf24Sender.onRun(SendRfWhenPossible);
