@@ -1,3 +1,10 @@
+///--------------------------------------------------------------
+/// Motorola & Shenkar - MotoUnit
+/// MotoHQ code that will handle all comunication via USB port
+/// With RF wireless comunication with CSMA/CA
+///
+/// By : Michael Lachower 032673584
+///--------------------------------------------------------------
 #include <Thread.h>
 #include <ThreadController.h>
 #include <SoftwareSerial.h>
@@ -5,28 +12,38 @@
 #include <nRF24L01.h>
 #include <RF24.h>
 
-/// Public enums used for all units and HQ
+/// Protocol enum defines
+/// Public enums used for all units and HQ for protocol consistency
 enum Brodcast_Type { All = 0, Single = 1,
-                     Control = 2, Distress = 3   };
+                     Control = 2, Distress = 3
+                   };
 enum Sender_Type { Soldier = 0, Commander = 1,
-                   HQ = 2, Extrnal = 3   };
+                   HQ = 2, Extrnal = 3
+                 };
 enum MessageData { Fire = 0, stopFire = 1,
                    Advance = 2, Reatrat = 3,
                    Ack = 4 , ReqestID = 5 , AssignID = 6,
-                   IsConnected = 7, VerifayConnect = 8, Distres = 9 };
+                   IsConnected = 7, VerifayConnect = 8, Distres = 9
+                 };
 enum EncodingOffset { SenderAdress = 0, ReciverAdress = 6,
                       BrodcastType = 12,  SenderType = 14,
-                      Data = 16, ClusterId = 22,  EndMsg = 26};
+                      Data = 16, ClusterId = 22,  EndMsg = 26
+                    };
 enum EncodingSize { AdressSize = 6 , BrodcastTypeSize = 2,
-                    SenderTypeSize = 2, DataSize = 6, ClusterIdSize = 4};
-                    
+                    SenderTypeSize = 2, DataSize = 6, ClusterIdSize = 4
+                  };
 
 
-/// RF Radio public variables
+
+/// RF24 variable for radio comunication
 RF24 radio(9, 10);
+
+/// RF Radio comunication addresses
+/// Address 000001 : Global communication address
+/// Address 000002 : Local cluster communication address
 const byte addresses[][6] = {"00001", "00002"};
 
-/// CSMA/CA variables              
+/// CSMA/CA variables
 // Collision Avoidence send tries made befor aborting
 const int caMaxResend = 100;
 int caResendLeft = 0;
@@ -45,11 +62,14 @@ SoftwareSerial LCD(0, 8);
 
 /// Leds public variables
 #define BlinkNumber 1
+
 /// LED connection Pins
 int ledG = 3;
 int ledB = 2;
 int ledR = 4;
+
 /// LED global comunication variables
+/// used to queue incoming messeges
 int redBlinkNumber = 0;
 int blueBlinkNumber = 0;
 int greenBlinkNumber = 0;
@@ -58,10 +78,12 @@ int purpleBlinkNumber = 0;
 /// buttons public variables
 /// Minimum time for buttons to be pressed again
 const int buttonCooldownTimer  = 5000;
+
 /// Button connection Pins
 const int button1Pin = 7;
 const int button2Pin = 6;
 const int button3Pin = 5;
+
 /// buttons global comunication variables
 int button1State = 0;
 int button1Timer = 0;
@@ -73,62 +95,100 @@ int button3State = 0;
 int button3Timer = 0;
 bool wasButton3Pressed = false;
 
-// ThreadController that will controll all threads with multi threhads
+/// ThreadController will run the application with multithreading
+/// 4 simultaneous threads are needed for :
+/// duplex communication via RF
+/// LED controll
+/// Button responsiveness
 ThreadController controll = ThreadController();
+
+/// inputButtonThread - is used for continuous listening to MotoUnit Buttons
+/// to not miss button presses
+/// will run function : chackInputButtons()
 Thread inputButtonThread = Thread();
+
+/// outputButtonThread - is used for continuous handling of LED
+/// MotoUnit output
+/// will run function : blinkLed()
 Thread outputButtonThread = Thread();
+
+/// rf24Sender - is used for sending RF messges when needed without
+/// missing any incoming USB or RF communication
+/// will run function : SendRfWhenPossible()
 Thread rf24Sender = Thread();
 
 /// Moto Unit Variables
-bool isMotoComander = true;
-bool isTestMode = false;
-int counter = 0;
-int mode = 0;
 
+/// Activation status of the device
+/// if false device will only be able to
+/// send activation beacon messeges until
+/// unit ID is given as a response by MotoHQ
 bool wasActivated = true;
+
+/// Activation beacon messeges status
+/// if true device has sent Activation beacon messege
+/// and is waiting for an answer
 bool wasRequestIdSent = false;
+
+/// Specific MotoUnit Address will be changed as soon as device is initiated
 uint8_t motounitAdress = 0;
+
+/// Specific MotoUnit Cluster ID will be changed as soon as device is initiated
 uint8_t motounitClusterID = 0;
+
+/// Specific MotoUnit Type determined by the hardware of the device
+/// can be set to : Commander / Soldier
 Sender_Type unitType = Commander;
 
+/// Setup is called once every time the device is turend on
 void setup() {
 
+  /// Random Seed is generated every boot and uses analog true random generation
   randomSeed(analogRead(0));
+
+  /// Serial communication initialized at 9600 baud rate
   Serial.begin(9600);
 
+  /// RF communication initialized
   radio.begin();
+  /// set RF communication power level is set to max for maximum distance
   radio.setPALevel(RF24_PA_MAX);
+  /// set Auto acknowledgment of RF communication
   radio.setAutoAck (true ) ;
+  /// set RF Radio to listening by default
   ReturnToListen();
 
+  /// Chack if the RF chip is connected and write to Serial
+  /// can be used for Serial port debuging
   Serial.print("is Chip Connected = " );
   Serial.println(radio.isChipConnected());
 
+  /// Set all button and LED Arduino pins
   pinMode(ledG, OUTPUT);
   pinMode(ledR, OUTPUT);
   pinMode(ledB, OUTPUT);
   pinMode(button1Pin, INPUT);
   pinMode(button2Pin, INPUT);
   pinMode(button3Pin, INPUT);
-  
+
   // digitalWrite(ledR, HIGH);
 
+  // Configure application threading functions and timers
   rf24Sender.onRun(SendRfWhenPossible);
   rf24Sender.setInterval(0);
 
-  // Configure Threads
   inputButtonThread.onRun(chackInputButtons);
   inputButtonThread.setInterval(0);
 
-  outputButtonThread.onRun(blinkBlueLed);
+  outputButtonThread.onRun(blinkLed);
   outputButtonThread.setInterval(0);
 
-  // Adds both threads to the controller
+  // Adds all threads to the controller
   controll.add(&rf24Sender);
   controll.add(&inputButtonThread);
   controll.add(&outputButtonThread); // & to pass the pointer to it
 
-  // Setup for moto Commander
+  // Setup LCD for Moto Commander
   if (unitType == Commander) {
     initializeLCD();
     writeToDisplay("Waiting For ID", "Press button 1");
@@ -139,13 +199,16 @@ void setup() {
 
 void loop() {
   controll.run();
-
+  /// Chack if unit is active and connected to HQ
   if (!wasActivated) {
+    /// send activation beacon messeges until
+    /// unit ID is given as a response by MotoHQ
     sendActivationBeacon();
     return;
   }
   decraseButtonTimers();
-  /// Writing to pipe
+  /// Test if any button is pressed and if so
+  /// handle writing message to RF Radio
   if (wasButton1Pressed && button1Timer <= 0) {
     uint32_t messege = 0;
     if (unitType == Commander) {
@@ -177,33 +240,43 @@ void loop() {
     wasButton3Pressed =  false;
   }
 
-/// Chack if there is a message for the unit
+  /// tests of there is messages waiting at RF Radio for the unit
+  /// Chack if data is avilable
   if (radio.available())
   {
-    Serial.println("--------------------------------------");
+    /// Read message
     uint32_t text = {0};
     radio.read(&text, sizeof(text));
+
+    ///Send acknowledgment
     radio.writeAckPayload(0, text, sizeof(text));
+
+    /// handle output via LEDs to unit
     handleMessage(text);
-  //  Serial.println(text);
+
   }
 }
 
+///  listener function used to detect the need for sending of a RF message 
 void SendRfWhenPossible() {
   if (outMessageAvilable) {
     writeToRadio(globalMessege);
   }
 }
 
+///  function by the button thread to initialize sending of a RF message
+///  @param : uint32_t msg - the message to send
 void SendMsg(uint32_t msg) {
   caResendLeft = caMaxResend;
   globalMessege = msg;
   outMessageAvilable = true;
 }
 
-
+///  function used to send a 32 bit message Via RF Radio
+///  using CSMA/CA to verify the communication 
+///  @param : uint32_t messege - the message to send
 void writeToRadio(uint32_t messege) {
-  Serial.println("--------------------------------------");
+
   Serial.println("Sending Message");
   csResendsLeft = csMaxResends;
   long randBackoff = random(BeckoffRandomMin, BeckoffRandomMax);
@@ -254,9 +327,9 @@ void ReturnToListen() {
 }
 
 
-// callback for hisThread
-void blinkBlueLed() {
-  /// Blink Leds if message was recived in a diffrent thread
+/// Blink Leds if message was recived in a diffrent thread
+void blinkLed() {
+  /// test what LED is to be blinked
   if (redBlinkNumber >= 1) {
     digitalWrite(ledR, HIGH);   // turn the LED on (HIGH is the voltage level)
     delay(200);                 // wait for a second
@@ -264,6 +337,7 @@ void blinkBlueLed() {
     delay(200);
     redBlinkNumber--;
   }
+    /// test what LED is to be blinked
   else if (blueBlinkNumber >= 1) {
     digitalWrite(ledB, HIGH);   // turn the LED on (HIGH is the voltage level)
     delay(200);                 // wait for a second
@@ -271,6 +345,7 @@ void blinkBlueLed() {
     delay(200);
     blueBlinkNumber--;
   }
+    /// test what LED is to be blinked
   else if (greenBlinkNumber >= 1) {
     digitalWrite(ledG, HIGH);   // turn the LED on (HIGH is the voltage level)
     delay(200);                 // wait for a second
@@ -291,7 +366,12 @@ void blinkBlueLed() {
 
 }
 
-// To set bits indepentely
+///  Helper function used to set up to 8 bits in a 32 bit message indepentely
+///  @param : uint32_t messege - the message to change bits in
+///  @param : uint8_t adress - the bits to change to
+///  @param : int startPoint - the bit location to start the change at
+///  @param : int endPoint - the bit location to end the change at
+///  #return : uint32_t - the changed message
 uint32_t setBits(uint32_t messege, uint8_t adress, int startPoint, int endPoint) {
   int count = 0;
   for (int i = startPoint; i < endPoint; i++) {
@@ -301,14 +381,23 @@ uint32_t setBits(uint32_t messege, uint8_t adress, int startPoint, int endPoint)
 
 }
 
+///  Helper function used to get a 8 bit sender address from a 32 bit message
+///  @param : uint32_t messege - the 32 bit message 
+///  #return : uint8_t - the 8 bit sender address
 uint8_t GetSenderAdress(uint32_t messege) {
   return GetAdress(messege, SenderAdress);
 }
-
+///  Helper function used to get a 8 bit reciver address from a 32 bit message
+///  @param : uint32_t messege - the 32 bit message 
+///  #return : uint8_t - the 8 bit sender address
 uint8_t GetReciverAdress(uint32_t messege) {
   return GetAdress(messege, ReciverAdress);
 }
 
+///  Helper function used to get a 8 bit address from a 32 bit message
+///  @param : uint32_t messege - the 32 bit message 
+///  @param : int offset - the offset of the wanted address 
+///  #return : uint8_t - the 8 bit address
 uint8_t GetAdress(uint32_t messege, int offset) {
   uint8_t add = 0;
   int count = 0;
@@ -318,6 +407,9 @@ uint8_t GetAdress(uint32_t messege, int offset) {
   return add;
 }
 
+///  Helper function used to get a 8 bit cluster ID from a 32 bit message
+///  @param : uint32_t messege - the 32 bit message 
+///  #return : uint8_t - the 8 bit cluster ID 
 uint8_t GetClusterId(uint32_t messege) {
   int offset = ClusterId;
   uint8_t add = 0;
@@ -328,6 +420,9 @@ uint8_t GetClusterId(uint32_t messege) {
   return add;
 }
 
+///  Helper function used to get message data from a 32 bit message
+///  @param : uint32_t messege - the 32 bit message 
+///  #return : MessageData - the MessageData enum
 MessageData GetData(uint32_t messege) {
   int offset = Data;
   uint8_t add = 0;
@@ -338,6 +433,10 @@ MessageData GetData(uint32_t messege) {
   return add;
 }
 
+
+///  Helper function used to get BrodcastType from a 32 bit message
+///  @param : uint32_t messege - the 32 bit message 
+///  #return : BrodcastType - the BrodcastType enum
 Brodcast_Type GetBrodcastType(uint32_t messege) {
   int offset = BrodcastType;
   uint8_t add = 0;
@@ -348,6 +447,9 @@ Brodcast_Type GetBrodcastType(uint32_t messege) {
   return add;
 }
 
+///  Helper function used to get Sender Type from a 32 bit message
+///  @param : uint32_t messege - the 32 bit message 
+///  #return : Sender_Type - the Sender_Type enum
 Sender_Type GetSenderType(uint32_t messege) {
   int offset = SenderType;
   uint8_t add = 0;
@@ -358,6 +460,8 @@ Sender_Type GetSenderType(uint32_t messege) {
   return add;
 }
 
+///  Helper function used to print a 32 bit message in binary format
+///  @param : uint32_t messege - the 32 bit message 
 void printMessageBits(uint32_t messege) {
   for (int i = 0; i < 32; i++) {
 
@@ -426,6 +530,7 @@ void sendActivationBeacon() {
 void handleHandShkae() {
   uint32_t text = {0};
   radio.read(&text, sizeof(text));
+  radio.writeAckPayload(0, text, sizeof(text));
   MessageData data = GetData( text);
   handleMessage(text);
   if (data == AssignID) {
