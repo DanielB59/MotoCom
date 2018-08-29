@@ -173,6 +173,8 @@ void setup() {
 
 
 
+  /// Set activation state to false and  device connected LED to show that
+  wasActivated = false;
   digitalWrite(ledR, HIGH);
 
 
@@ -214,31 +216,38 @@ void loop() {
   /// handle writing message to RF Radio
   if (wasButton1Pressed && button1Timer <= 0) {
     uint32_t messege = 0;
+    /// set message caaording to unit type
     if (unitType == Commander) {
       messege = makeMessage(0, All, Fire) ;
     } else {
       messege = makeMessage(0, All, Distres) ;
     }
+    /// broadcast message
     SendMsg(messege);
     wasButton1Pressed =  false;
   }
   else if (wasButton2Pressed && button2Timer <= 0) {
     uint32_t messege = 0;
+    /// set message caaording to unit type
     if (unitType == Commander) {
       messege = makeMessage(0, All, stopFire) ;
     } else {
       messege = makeMessage(0, All, Distres) ;
     }
+    /// broadcast message
     SendMsg(messege);
     wasButton2Pressed =  false;
   }
   else if (wasButton3Pressed && button3Timer <= 0) {
     uint32_t messege = 0;
+    /// set message caaording to unit type
     if (unitType == Commander) {
       messege = makeMessage(0, All, Advance) ;
     } else {
       messege = makeMessage(0, All, Distres) ;
     }
+
+    /// broadcast message
     SendMsg(messege);
     wasButton3Pressed =  false;
   }
@@ -260,7 +269,7 @@ void loop() {
   }
 }
 
-///  listener function used to detect the need for sending of a RF message 
+///  listener function used to detect the need for sending of a RF message
 void SendRfWhenPossible() {
   if (outMessageAvilable) {
     writeToRadio(globalMessege);
@@ -276,33 +285,43 @@ void SendMsg(uint32_t msg) {
 }
 
 ///  function used to send a 32 bit message Via RF Radio
-///  using CSMA/CA to verify the communication 
+///  using CSMA/CA to verify the communication
 ///  @param : uint32_t messege - the message to send
 void writeToRadio(uint32_t messege) {
 
   Serial.println("Sending Message");
+  /// Set maximum CS tries
   csResendsLeft = csMaxResends;
+  /// Set backoff ranodm time
   long randBackoff = random(BeckoffRandomMin, BeckoffRandomMax);
+  /// perform CS on RF channel
   while (!radio.testCarrier() && radio.testRPD () && csResendsLeft <= 0) {
+    /// channel is occupied perform random backoff
     delay(randBackoff);
-    Serial.println("RPD Ocupied");
+    Serial.println("Channel Occupied");
     csResendsLeft--;
   }
+  /// test is CS max tries has been exceeded
   if (csResendsLeft > 0) {
     Serial.println("Channel free for Sending");
   }
   else {
+    /// sending falied chaneel not free
     Serial.println("Exited via Max Timer : Sending failed");
     delay(randBackoff);
     outMessageAvilable = true;
     return;
   }
+  /// set writing pipe
   radio.openWritingPipe(addresses[0]);
   radio.stopListening();
+  /// send data on RF
   bool writeRslt = radio.write(&messege, sizeof(messege));
-
+  /// test if massage was acknowledged for CA
   if (!writeRslt) {
+    /// test if massage was not acknowledgeed more then CA resends left
     if (caResendLeft > 0) {
+      /// acknowledgment not recived perform random backoff
       Serial.print("Ack Not Recived -> resending for time : ");
       Serial.println(caResendLeft);
       Serial.print("Waiting For : ");
@@ -311,12 +330,14 @@ void writeToRadio(uint32_t messege) {
       outMessageAvilable = true;
       caResendLeft--;
     } else {
+      /// sending falied acknowledgment not recived return to listening
       outMessageAvilable = false;
       Serial.println("Ack Not Recived 20 times Msg Failed");
       ReturnToListen();
     }
 
   } else {
+    /// Message sent return to listening
     outMessageAvilable = false;
     Serial.println("Ack Recived");
     ReturnToListen();
@@ -324,6 +345,7 @@ void writeToRadio(uint32_t messege) {
   }
 }
 
+/// Returns RF to lisening mode
 void ReturnToListen() {
   radio.openReadingPipe(0, addresses[0]);
   radio.startListening();
@@ -340,7 +362,7 @@ void blinkLed() {
     delay(200);
     redBlinkNumber--;
   }
-    /// test what LED is to be blinked
+  /// test what LED is to be blinked
   else if (blueBlinkNumber >= 1) {
     digitalWrite(ledB, HIGH);   // turn the LED on (HIGH is the voltage level)
     delay(200);                 // wait for a second
@@ -348,7 +370,7 @@ void blinkLed() {
     delay(200);
     blueBlinkNumber--;
   }
-    /// test what LED is to be blinked
+  /// test what LED is to be blinked
   else if (greenBlinkNumber >= 1) {
     digitalWrite(ledG, HIGH);   // turn the LED on (HIGH is the voltage level)
     delay(200);                 // wait for a second
@@ -369,123 +391,20 @@ void blinkLed() {
 
 }
 
-///  Helper function used to set up to 8 bits in a 32 bit message indepentely
-///  @param : uint32_t messege - the message to change bits in
-///  @param : uint8_t adress - the bits to change to
-///  @param : int startPoint - the bit location to start the change at
-///  @param : int endPoint - the bit location to end the change at
-///  #return : uint32_t - the changed message
-uint32_t setBits(uint32_t messege, uint8_t adress, int startPoint, int endPoint) {
-  int count = 0;
-  for (int i = startPoint; i < endPoint; i++) {
-    bitWrite(messege, i, bitRead(adress, count++));
-  }
-  return messege;
 
-}
-
-///  Helper function used to get a 8 bit sender address from a 32 bit message
-///  @param : uint32_t messege - the 32 bit message 
-///  #return : uint8_t - the 8 bit sender address
-uint8_t GetSenderAdress(uint32_t messege) {
-  return GetAdress(messege, SenderAdress);
-}
-///  Helper function used to get a 8 bit reciver address from a 32 bit message
-///  @param : uint32_t messege - the 32 bit message 
-///  #return : uint8_t - the 8 bit sender address
-uint8_t GetReciverAdress(uint32_t messege) {
-  return GetAdress(messege, ReciverAdress);
-}
-
-///  Helper function used to get a 8 bit address from a 32 bit message
-///  @param : uint32_t messege - the 32 bit message 
-///  @param : int offset - the offset of the wanted address 
-///  #return : uint8_t - the 8 bit address
-uint8_t GetAdress(uint32_t messege, int offset) {
-  uint8_t add = 0;
-  int count = 0;
-  for (int i = offset; i < offset + AdressSize; i++) {
-    bitWrite(add, count++, bitRead(messege, i));
-  }
-  return add;
-}
-
-///  Helper function used to get a 8 bit cluster ID from a 32 bit message
-///  @param : uint32_t messege - the 32 bit message 
-///  #return : uint8_t - the 8 bit cluster ID 
-uint8_t GetClusterId(uint32_t messege) {
-  int offset = ClusterId;
-  uint8_t add = 0;
-  int count = 0;
-  for (int i = offset; i < offset + ClusterIdSize; i++) {
-    bitWrite(add, count++, bitRead(messege, i));
-  }
-  return add;
-}
-
-///  Helper function used to get message data from a 32 bit message
-///  @param : uint32_t messege - the 32 bit message 
-///  #return : MessageData - the MessageData enum
-MessageData GetData(uint32_t messege) {
-  int offset = Data;
-  uint8_t add = 0;
-  int count = 0;
-  for (int i = offset; i < offset + DataSize; i++) {
-    bitWrite(add, count++, bitRead(messege, i));
-  }
-  return add;
-}
-
-
-///  Helper function used to get BrodcastType from a 32 bit message
-///  @param : uint32_t messege - the 32 bit message 
-///  #return : BrodcastType - the BrodcastType enum
-Brodcast_Type GetBrodcastType(uint32_t messege) {
-  int offset = BrodcastType;
-  uint8_t add = 0;
-  int count = 0;
-  for (int i = offset; i < offset + BrodcastTypeSize; i++) {
-    bitWrite(add, count++, bitRead(messege, i));
-  }
-  return add;
-}
-
-///  Helper function used to get Sender Type from a 32 bit message
-///  @param : uint32_t messege - the 32 bit message 
-///  #return : Sender_Type - the Sender_Type enum
-Sender_Type GetSenderType(uint32_t messege) {
-  int offset = SenderType;
-  uint8_t add = 0;
-  int count = 0;
-  for (int i = offset; i < offset + SenderTypeSize; i++) {
-    bitWrite(add, count++, bitRead(messege, i));
-  }
-  return add;
-}
-
-///  Helper function used to print a 32 bit message in binary format
-///  @param : uint32_t messege - the 32 bit message 
-void printMessageBits(uint32_t messege) {
-  for (int i = 0; i < 32; i++) {
-
-    Serial.print(bitRead(messege, i));
-    if ((i + 1) % 4 == 0) {
-      Serial.print(" ");
-    }
-  }
-  Serial.println(" ");
-}
-
+///  Clears Commander LCD screen display
 void clearLCD() {
   LCD.write(0xFE);
   LCD.write(0x01);
 }
-
+///  initialize Commander LCD screen display
 void initializeLCD() {
   LCD.begin(9600);
   clearLCD();
 }
-
+///  write message in 2 string rows Commander LCD screen display
+///  @param : const char *row1 - the 1 row to write to display
+///  @param : const char *row2 - the 2 row to write to display
 void writeToDisplay(const char *row1, const char *row2) {
   clearLCD();
   LCD.write(row1);
@@ -493,7 +412,7 @@ void writeToDisplay(const char *row1, const char *row2) {
   LCD.write(192);
   LCD.write(row2);
 }
-
+/// Reset Button Timers if needed has to be called every loop iteration
 void decraseButtonTimers() {
   if (button1Timer > 0) {
     button1Timer--;
@@ -506,46 +425,62 @@ void decraseButtonTimers() {
   }
 }
 
+/// send activation beacon messeges until
+/// unit ID is given as a response by MotoHQ
 void sendActivationBeacon() {
 
   /// Reset Button Timers if needed
   decraseButtonTimers();
-  /// Writing to pipe
+  /// if button 1 is pressed send activation beacon
   if (wasButton1Pressed && button1Timer <= 0) {
+    /// set message to activation beacon
     uint32_t messege  = makeMessage(0, Control, ReqestID) ;
-    writeToRadio(messege);
-
+    /// broadcast message
+    SendMsg(messege);
+    /// Reset Button
     wasButton1Pressed =  false;
+    /// Update request ID sent
     wasRequestIdSent = true;
-    // delay(50);
-  }
 
+  }
+  /// if request ID is not sent dont continue
   if (!wasRequestIdSent) {
     return;
   }
-  /// Reading from pipe
+  /// Reading from RF to see if there is a response
   if (radio.available())
   {
+    /// if there is a response send the result to be verified
     handleHandShkae();
   }
 }
 
+/// verify response from MotoHQ and recive ID & cluster ID
 void handleHandShkae() {
   uint32_t text = {0};
+  /// Read verification message
   radio.read(&text, sizeof(text));
+  ///Send acknowledgment
   radio.writeAckPayload(0, text, sizeof(text));
+  ///  extract message data
   MessageData data = GetData( text);
+  ///  output visual acknowledgment
   handleMessage(text);
+  /// verify message data
   if (data == AssignID) {
+    /// Activate Device
     wasActivated = true;
-
     Serial.println("Connected");
+    ///  extract device ID from message
     motounitAdress = GetReciverAdress(text);
     Serial.print("motounitAdress = ");
     Serial.println(motounitAdress);
+    ///  extract cluster ID from message
     motounitClusterID = GetClusterId(text);
+    ///  turn off not device connected LED
     digitalWrite(ledR, LOW);
     if (unitType == Commander) {
+      ///  write message to Commander LCD screen display
       char unitAdressString[8];
       writeToDisplay("Connected with ID:", itoa(motounitAdress, unitAdressString, 10));
     }
@@ -556,7 +491,7 @@ void handleHandShkae() {
 
 }
 
-
+/// thread function fro reciving live button input
 void chackInputButtons() {
   /// will only send messages when buttons are pressed
   button1State = digitalRead(button1Pin);
@@ -585,8 +520,10 @@ void chackInputButtons() {
 
 }
 
-
+/// handle message according to unit type and message type
 void handleMessage(uint32_t text) {
+
+  /// print to serial all message data for debug
   printMessageBits(text);
 
   uint8_t sendAdress = GetSenderAdress(text);
@@ -613,33 +550,31 @@ void handleMessage(uint32_t text) {
   Serial.print("Cluster ID = " );
   Serial.println(clusterId);
 
+  // test if the message is addresed to Same Cluster ID as unit
   if (clusterId == motounitClusterID) {
-    //    Serial.println("Same Cluster ID" );
+    // test if this unit is a commander
     if (unitType == Commander) {
-      //  Serial.println("Recived becouse i am commander" );
+      // output message to unit
       outputMessageData(data);
       return;
     }
+    // test if sending unit is a commander
     if (senderType == Commander) {
-      // Serial.println("Recived and i got if from commander" );
+      // output message to unit
       outputMessageData(data);
       return;
     }
+    // test if sending unit is HQ
     if (senderType == HQ) {
-      Serial.println("Recived and i got if from HQ" );
+      /// if the maggae is a global broadcast message
       if (brodcastType == All || brodcastType == Distress) {
-        Serial.println("brodcastType == All || brodcastType == Distress" );
+        // output message to unit
         outputMessageData(data);
         return;
       }
-      Serial.print("brodcastType = " );
-      Serial.println(brodcastType);
-      Serial.print("motoUnit Adress = ");
-      Serial.println( motounitAdress);
-      Serial.print("reciver Adress = " );
-      Serial.println( recAdress);
+      /// if the maggae is addresed to unit
       if (brodcastType == Single && motounitAdress == recAdress) {
-        Serial.println("brodcastType == Single && motoUnitAdress == recAdress" );
+        // output message to unit
         outputMessageData(data);
         return;
       }
@@ -719,7 +654,11 @@ void outputMessageData(MessageData data) {
   }
 
 }
-
+///  Helper function used to make m message using the global enums
+///  @param : uint8_t reciver - the 8 bit reciver address
+///  @param : Brodcast_Type type - the BrodcastType of the message
+///  @param :  MessageData data - the MessageData of the message
+///  #return : uint32_t - the final message created
 uint32_t makeMessage(uint8_t reciver, Brodcast_Type type, MessageData data) {
   uint32_t messege = 0;
   messege = setBits(messege, motounitAdress, SenderAdress, ReciverAdress);
@@ -730,6 +669,114 @@ uint32_t makeMessage(uint8_t reciver, Brodcast_Type type, MessageData data) {
   messege = setBits(messege, motounitClusterID, ClusterId, EndMsg);
   return messege;
 }
+
+///  Helper function used to set up to 8 bits in a 32 bit message indepentely
+///  @param : uint32_t messege - the message to change bits in
+///  @param : uint8_t adress - the bits to change to
+///  @param : int startPoint - the bit location to start the change at
+///  @param : int endPoint - the bit location to end the change at
+///  #return : uint32_t - the changed message
+uint32_t setBits(uint32_t messege, uint8_t adress, int startPoint, int endPoint) {
+  int count = 0;
+  for (int i = startPoint; i < endPoint; i++) {
+    bitWrite(messege, i, bitRead(adress, count++));
+  }
+  return messege;
+
+}
+
+///  Helper function used to get a 8 bit sender address from a 32 bit message
+///  @param : uint32_t messege - the 32 bit message
+///  #return : uint8_t - the 8 bit sender address
+uint8_t GetSenderAdress(uint32_t messege) {
+  return GetAdress(messege, SenderAdress);
+}
+///  Helper function used to get a 8 bit reciver address from a 32 bit message
+///  @param : uint32_t messege - the 32 bit message
+///  #return : uint8_t - the 8 bit sender address
+uint8_t GetReciverAdress(uint32_t messege) {
+  return GetAdress(messege, ReciverAdress);
+}
+
+///  Helper function used to get a 8 bit address from a 32 bit message
+///  @param : uint32_t messege - the 32 bit message
+///  @param : int offset - the offset of the wanted address
+///  #return : uint8_t - the 8 bit address
+uint8_t GetAdress(uint32_t messege, int offset) {
+  uint8_t add = 0;
+  int count = 0;
+  for (int i = offset; i < offset + AdressSize; i++) {
+    bitWrite(add, count++, bitRead(messege, i));
+  }
+  return add;
+}
+
+///  Helper function used to get a 8 bit cluster ID from a 32 bit message
+///  @param : uint32_t messege - the 32 bit message
+///  #return : uint8_t - the 8 bit cluster ID
+uint8_t GetClusterId(uint32_t messege) {
+  int offset = ClusterId;
+  uint8_t add = 0;
+  int count = 0;
+  for (int i = offset; i < offset + ClusterIdSize; i++) {
+    bitWrite(add, count++, bitRead(messege, i));
+  }
+  return add;
+}
+
+///  Helper function used to get message data from a 32 bit message
+///  @param : uint32_t messege - the 32 bit message
+///  #return : MessageData - the MessageData enum
+MessageData GetData(uint32_t messege) {
+  int offset = Data;
+  uint8_t add = 0;
+  int count = 0;
+  for (int i = offset; i < offset + DataSize; i++) {
+    bitWrite(add, count++, bitRead(messege, i));
+  }
+  return add;
+}
+
+
+///  Helper function used to get BrodcastType from a 32 bit message
+///  @param : uint32_t messege - the 32 bit message
+///  #return : BrodcastType - the BrodcastType enum
+Brodcast_Type GetBrodcastType(uint32_t messege) {
+  int offset = BrodcastType;
+  uint8_t add = 0;
+  int count = 0;
+  for (int i = offset; i < offset + BrodcastTypeSize; i++) {
+    bitWrite(add, count++, bitRead(messege, i));
+  }
+  return add;
+}
+
+///  Helper function used to get Sender Type from a 32 bit message
+///  @param : uint32_t messege - the 32 bit message
+///  #return : Sender_Type - the Sender_Type enum
+Sender_Type GetSenderType(uint32_t messege) {
+  int offset = SenderType;
+  uint8_t add = 0;
+  int count = 0;
+  for (int i = offset; i < offset + SenderTypeSize; i++) {
+    bitWrite(add, count++, bitRead(messege, i));
+  }
+  return add;
+}
+
+///  Helper function used to print a 32 bit message in binary format
+///  @param : uint32_t messege - the 32 bit message
+void printMessageBits(uint32_t messege) {
+  for (int i = 0; i < 32; i++) {
+
+    Serial.print(bitRead(messege, i));
+    if ((i + 1) % 4 == 0) {
+      Serial.print(" ");
+    }
+  }
+  Serial.println(" ");
+}
+
 
 
 
