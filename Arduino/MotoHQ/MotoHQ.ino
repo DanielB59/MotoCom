@@ -155,34 +155,40 @@ void chackRadioForInput() {
 
 
 void chackComputerForInput() {
+  /// test if unit is active and connected to HQ
   if (!wasActivated) {
     chackComputerActivation();
     return;
   }
+  /// tests of there is messages waiting at serial port for the unit
+  /// Chack if data is avilable
   if (Serial.available()) {
-
-    digitalWrite(2, HIGH);
-    uint32_t msg = getMsgFromSerial();;
+    /// Turn on Received message LED
+    digitalWrite(ledG, HIGH);
+    uint32_t msg = getMsgFromSerial();
+    /// Send message to RF
     SendMsg(msg);
     delay(200);
-    digitalWrite(2, LOW);
+    digitalWrite(ledG, LOW);
 
   }
 }
 
-
-
+/// test for activation messeges from serial
 void chackComputerActivation() {
-
+  /// tests of there is messages waiting at serial port for the unit
+  /// Chack if data is avilable
   if (Serial.available()) {
     uint32_t msg = getMsgFromSerial();
-
+    /// test for activation messeges has the correct format
     if (0x7F000 == msg) {
       wasActivated = true;
-      digitalWrite(3, HIGH);
-      SendMsg(msg);
+      /// Turn on Received message LED
+      digitalWrite(ledG, HIGH);
+      /// confirm activation messeges
+      sendMsgToComputer(msg);
       delay(200);
-      digitalWrite(3, LOW);
+      digitalWrite(ledG, LOW);
     }
   }
 }
@@ -219,39 +225,48 @@ void SendMsg(uint32_t msg) {
 }
 
 ///  function used to send a 32 bit message Via RF Radio
-///  using CSMA/CA to verify the communication 
+///  using CSMA/CA to verify the communication
 ///  @param : uint32_t messege - the message to send
 void writeToRadio(uint32_t messege) {
-
+  /// Set maximum CS tries
   csResendsLeft = csMaxResends;
+  /// Set backoff ranodm time
   long randBackoff = random(BeckoffRandomMin, BeckoffRandomMax);
+  /// perform CS on RF channel
   while (!radio.testCarrier() && radio.testRPD () && csResendsLeft <= 0) {
+    /// channel is occupied perform random backoff
     delay(randBackoff);
     csResendsLeft--;
   }
-  if (csResendsLeft > 0) {
-    //Serial.println("Channel free for Sending");
-  }
+  /// test is CS max tries has been exceeded
+  if (csResendsLeft > 0) { }
   else {
+    /// sending falied chaneel not free
     delay(randBackoff);
     outMessageAvilable = true;
     return;
   }
+  /// set writing RF pipe
   radio.openWritingPipe(addresses[0]);
   radio.stopListening();
+  /// send data on RF
   bool writeRslt = radio.write(&messege, sizeof(messege));
-
+  /// test if massage was acknowledged for CA
   if (!writeRslt) {
+    /// test if massage was not acknowledgeed more then CA resends left
     if (caResendLeft > 0) {
+      /// acknowledgment not recived perform random backoff
       delay(randBackoff);
       outMessageAvilable = true;
       caResendLeft--;
     } else {
+      /// sending falied acknowledgment not recived return to listening
       outMessageAvilable = false;
       ReturnToListen();
     }
 
   } else {
+    /// Message sent return to listening
     outMessageAvilable = false;
     ReturnToListen();
   }
@@ -270,7 +285,7 @@ void loop() {
 }
 
 ///  Helper function used to print a 32 bit message in binary format
-///  @param : uint32_t messege - the 32 bit message 
+///  @param : uint32_t messege - the 32 bit message
 void printMessageBits(uint32_t messege) {
   for (int i = 0; i < 32; i++) {
 

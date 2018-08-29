@@ -312,7 +312,7 @@ void writeToRadio(uint32_t messege) {
     outMessageAvilable = true;
     return;
   }
-  /// set writing pipe
+  /// set writing RF pipe
   radio.openWritingPipe(addresses[0]);
   radio.stopListening();
   /// send data on RF
@@ -351,79 +351,6 @@ void ReturnToListen() {
   radio.startListening();
 }
 
-
-/// Blink Leds if message was recived in a diffrent thread
-void blinkLed() {
-  /// test what LED is to be blinked
-  if (redBlinkNumber >= 1) {
-    digitalWrite(ledR, HIGH);   // turn the LED on (HIGH is the voltage level)
-    delay(200);                 // wait for a second
-    digitalWrite(ledR, LOW);    // turn the LED off by making the voltage LOW
-    delay(200);
-    redBlinkNumber--;
-  }
-  /// test what LED is to be blinked
-  else if (blueBlinkNumber >= 1) {
-    digitalWrite(ledB, HIGH);   // turn the LED on (HIGH is the voltage level)
-    delay(200);                 // wait for a second
-    digitalWrite(ledB, LOW);    // turn the LED off by making the voltage LOW
-    delay(200);
-    blueBlinkNumber--;
-  }
-  /// test what LED is to be blinked
-  else if (greenBlinkNumber >= 1) {
-    digitalWrite(ledG, HIGH);   // turn the LED on (HIGH is the voltage level)
-    delay(200);                 // wait for a second
-    digitalWrite(ledG, LOW);    // turn the LED off by making the voltage LOW
-    delay(200);
-    greenBlinkNumber--;
-  }
-  else if (purpleBlinkNumber >= 1) {
-    digitalWrite(ledR, HIGH);
-    digitalWrite(ledG, HIGH);   // turn the LED on (HIGH is the voltage level)
-    delay(200);                 // wait for a second
-    digitalWrite(ledR, LOW);    // turn the LED off by making the voltage LOW
-    digitalWrite(ledG, LOW);
-    delay(200);
-    purpleBlinkNumber--;
-  }
-
-
-}
-
-
-///  Clears Commander LCD screen display
-void clearLCD() {
-  LCD.write(0xFE);
-  LCD.write(0x01);
-}
-///  initialize Commander LCD screen display
-void initializeLCD() {
-  LCD.begin(9600);
-  clearLCD();
-}
-///  write message in 2 string rows Commander LCD screen display
-///  @param : const char *row1 - the 1 row to write to display
-///  @param : const char *row2 - the 2 row to write to display
-void writeToDisplay(const char *row1, const char *row2) {
-  clearLCD();
-  LCD.write(row1);
-  LCD.write(254);
-  LCD.write(192);
-  LCD.write(row2);
-}
-/// Reset Button Timers if needed has to be called every loop iteration
-void decraseButtonTimers() {
-  if (button1Timer > 0) {
-    button1Timer--;
-  }
-  if (button2Timer > 0) {
-    button2Timer--;
-  }
-  if (button3Timer > 0) {
-    button3Timer--;
-  }
-}
 
 /// send activation beacon messeges until
 /// unit ID is given as a response by MotoHQ
@@ -488,35 +415,6 @@ void handleHandShkae() {
   } else {
     Serial.println("Not Connected");
   }
-
-}
-
-/// thread function fro reciving live button input
-void chackInputButtons() {
-  /// will only send messages when buttons are pressed
-  button1State = digitalRead(button1Pin);
-  if (button1State == HIGH) {
-    if (!wasButton1Pressed) {
-      wasButton1Pressed = true;
-      button1Timer = buttonCooldownTimer;
-    }
-  }
-  button2State = digitalRead(button2Pin);
-  if (button2State == HIGH ) {
-    if (!wasButton2Pressed) {
-      wasButton2Pressed = true;
-      button2Timer = buttonCooldownTimer;
-    }
-  }
-  button3State = digitalRead(button3Pin);
-  if (button3State == HIGH ) {
-    if (!wasButton3Pressed) {
-      wasButton3Pressed = true;
-      button3Timer = buttonCooldownTimer;
-    }
-  }
-
-
 
 }
 
@@ -653,6 +551,108 @@ void outputMessageData(MessageData data) {
 
   }
 
+}
+
+
+/// thread function fro reciving live button input
+void chackInputButtons() {
+  /// will only send messages when buttons are pressed
+  button1State = digitalRead(button1Pin);
+  if (button1State == HIGH) {
+    if (!wasButton1Pressed) {
+      wasButton1Pressed = true;
+      button1Timer = buttonCooldownTimer;
+    }
+  }
+  button2State = digitalRead(button2Pin);
+  if (button2State == HIGH ) {
+    if (!wasButton2Pressed) {
+      wasButton2Pressed = true;
+      button2Timer = buttonCooldownTimer;
+    }
+  }
+  button3State = digitalRead(button3Pin);
+  if (button3State == HIGH ) {
+    if (!wasButton3Pressed) {
+      wasButton3Pressed = true;
+      button3Timer = buttonCooldownTimer;
+    }
+  }
+
+}
+
+
+/// Blink Leds if message was recived in a diffrent thread
+void blinkLed() {
+  /// test what LED is to be blinked
+  if (redBlinkNumber >= 1) {
+    digitalWrite(ledR, HIGH);   // turn the LED on (HIGH is the voltage level)
+    delay(200);                 // wait for a second
+    digitalWrite(ledR, LOW);    // turn the LED off by making the voltage LOW
+    delay(200);
+    redBlinkNumber--;
+  }
+  /// test what LED is to be blinked
+  else if (blueBlinkNumber >= 1) {
+    digitalWrite(ledB, HIGH);   // turn the LED on (HIGH is the voltage level)
+    delay(200);                 // wait for a second
+    digitalWrite(ledB, LOW);    // turn the LED off by making the voltage LOW
+    delay(200);
+    blueBlinkNumber--;
+  }
+  /// test what LED is to be blinked
+  else if (greenBlinkNumber >= 1) {
+    digitalWrite(ledG, HIGH);   // turn the LED on (HIGH is the voltage level)
+    delay(200);                 // wait for a second
+    digitalWrite(ledG, LOW);    // turn the LED off by making the voltage LOW
+    delay(200);
+    greenBlinkNumber--;
+  }
+  else if (purpleBlinkNumber >= 1) {
+    digitalWrite(ledR, HIGH);
+    digitalWrite(ledG, HIGH);   // turn the LED on (HIGH is the voltage level)
+    delay(200);                 // wait for a second
+    digitalWrite(ledR, LOW);    // turn the LED off by making the voltage LOW
+    digitalWrite(ledG, LOW);
+    delay(200);
+    purpleBlinkNumber--;
+  }
+
+
+}
+
+
+///  Clears Commander LCD screen display
+void clearLCD() {
+  LCD.write(0xFE);
+  LCD.write(0x01);
+}
+///  initialize Commander LCD screen display
+void initializeLCD() {
+  LCD.begin(9600);
+  clearLCD();
+}
+///  write message in 2 string rows Commander LCD screen display
+///  @param : const char *row1 - the 1 row to write to display
+///  @param : const char *row2 - the 2 row to write to display
+void writeToDisplay(const char *row1, const char *row2) {
+  clearLCD();
+  LCD.write(row1);
+  LCD.write(254);
+  LCD.write(192);
+  LCD.write(row2);
+}
+/// Reset Button Timers if needed has to be called every loop iteration
+void decraseButtonTimers() {
+  if (button1Timer > 0) {
+    button1Timer--;
+  }
+  if (button2Timer > 0) {
+    button2Timer--;
+  }
+  if (button3Timer > 0) {
+    button3Timer--;
+  }
 }
 ///  Helper function used to make m message using the global enums
 ///  @param : uint8_t reciver - the 8 bit reciver address
